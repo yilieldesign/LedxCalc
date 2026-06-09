@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.eliezercruz.ledxcalc.domain.StructureMounting
+import com.eliezercruz.ledxcalc.ui.formatUiText
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
 
 @Composable
@@ -25,7 +26,7 @@ fun StructureMountingSelector(
 ) {
     LedPanel(modifier = modifier, accentColor = LedColors.NeonBlue) {
         Text(
-            text = "🏗️ ¿Cuál será tu estructura?",
+            text = formatUiText("🏗️ ¿Cuál será tu estructura?"),
             color = LedColors.NeonCyan,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,

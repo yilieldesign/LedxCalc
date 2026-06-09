@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.eliezercruz.ledxcalc.domain.BreakerRating
 import com.eliezercruz.ledxcalc.domain.ElectricalLoadCalculator
 import com.eliezercruz.ledxcalc.domain.SupplyVoltage
+import com.eliezercruz.ledxcalc.ui.formatUiText
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
 import com.eliezercruz.ledxcalc.util.formatDouble
 
@@ -77,7 +78,7 @@ fun ElectricalPowerCard(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
         Text(
-            text = "⚡ POTENCIA Y PROTECCIÓN (Regla del 80%)",
+            text = formatUiText("⚡ POTENCIA Y PROTECCIÓN (Regla del 80%)"),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = LedColors.NeonCyan,
@@ -128,7 +129,7 @@ fun ElectricalPowerCard(
         PowerLine("Gabinetes máx. por circuito: ${load.gabinetesPermitidosPorCircuito}", LedColors.BasesAccent)
 
         Text(
-            text = load.mensajeAlerta,
+            text = formatUiText(load.mensajeAlerta),
             color = accentColor,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = if (load.sobrepasaLimite) FontWeight.Bold else FontWeight.Normal,
@@ -140,7 +141,7 @@ fun ElectricalPowerCard(
         )
 
         Text(
-            text = "🔌 ${load.mensajeDistribucion}",
+            text = formatUiText("🔌 ${load.mensajeDistribucion}"),
             color = LedColors.TextPrimary,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.fillMaxWidth(),

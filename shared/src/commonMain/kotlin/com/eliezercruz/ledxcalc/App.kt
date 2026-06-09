@@ -33,6 +33,7 @@ import com.eliezercruz.ledxcalc.ui.components.Button3D
 import com.eliezercruz.ledxcalc.ui.components.LedPixelBackground
 import com.eliezercruz.ledxcalc.ui.components.LedTitleBar
 import com.eliezercruz.ledxcalc.ui.screens.ResolutionCalculatorScreen
+import com.eliezercruz.ledxcalc.ui.formatUiText
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
 import com.eliezercruz.ledxcalc.ui.theme.LedxCalcTheme
 import com.eliezercruz.ledxcalc.resources.Res
@@ -105,7 +106,7 @@ private fun WelcomeScreen(onStart: () -> Unit) {
         Image(painterResource(Res.drawable.logo_g), "Logo G", Modifier.height(50.dp))
         Spacer(Modifier.height(12.dp))
         Text(
-            "✨ Esta app fue creada por Eliezer Cruz ✨",
+            formatUiText("✨ Esta app fue creada por Eliezer Cruz ✨"),
             color = LedColors.NeonGold,
             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
             textAlign = TextAlign.Center

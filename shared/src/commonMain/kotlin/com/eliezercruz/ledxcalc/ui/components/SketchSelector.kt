@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.eliezercruz.ledxcalc.domain.SketchKind
 import com.eliezercruz.ledxcalc.domain.SketchSelection
+import com.eliezercruz.ledxcalc.ui.formatUiText
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -26,7 +27,7 @@ fun SketchOptionsSelector(
 ) {
     LedPanel(modifier = modifier, accentColor = LedColors.NeonPurple) {
         Text(
-            text = "📐 Bocetos a mostrar e incluir en PDF",
+            text = formatUiText("📐 Bocetos a mostrar e incluir en PDF"),
             color = LedColors.NeonCyan,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,

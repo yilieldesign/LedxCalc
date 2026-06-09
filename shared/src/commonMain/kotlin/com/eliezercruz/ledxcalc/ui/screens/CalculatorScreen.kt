@@ -66,6 +66,7 @@ import com.eliezercruz.ledxcalc.ui.sketches.HoleSketch
 import com.eliezercruz.ledxcalc.ui.sketches.ModuleSketch
 import com.eliezercruz.ledxcalc.ui.sketches.SketchSection
 import com.eliezercruz.ledxcalc.ui.sketches.TrussSketch
+import com.eliezercruz.ledxcalc.ui.formatUiText
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
 import com.eliezercruz.ledxcalc.resources.Res
 import com.eliezercruz.ledxcalc.resources.logo_calculadora
@@ -140,7 +141,7 @@ fun ResolutionCalculatorScreen(
         } else {
             customSpec?.let { custom ->
                 Text(
-                    text = "📐 Módulo personalizado: ${custom.dropdownLabel}",
+                    text = formatUiText("📐 Módulo personalizado: ${custom.dropdownLabel}"),
                     color = LedColors.NeonCyan,
                     modifier = Modifier.fillMaxWidth()
                         .background(LedColors.Panel.copy(alpha = 0.9f), MaterialTheme.shapes.medium)
@@ -225,7 +226,7 @@ fun ResolutionCalculatorScreen(
             }
         } else if (widthInput.isNotBlank() || heightInput.isNotBlank()) {
             Text(
-                "⚠️ Ingresa valores válidos para ancho y alto.",
+                formatUiText("⚠️ Ingresa valores válidos para ancho y alto."),
                 color = LedColors.TextSecondary,
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 textAlign = TextAlign.Center
@@ -245,7 +246,7 @@ fun ResolutionCalculatorScreen(
             Image(painterResource(Res.drawable.logo_g), "Logo G", Modifier.height(50.dp))
         }
         Text(
-            "✨ Esta app fue creada por Eliezer Cruz ✨",
+            formatUiText("✨ Esta app fue creada por Eliezer Cruz ✨"),
             color = LedColors.Result.Footer,
             modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
             textAlign = TextAlign.Center
@@ -453,7 +454,7 @@ private fun ResolutionResults(
 
 @Composable
 private fun ResultLine(text: String, color: Color = LedColors.Result.Default, style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleMedium) {
-    Text(text, style = style, color = color, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), textAlign = TextAlign.Center)
+    Text(formatUiText(text), style = style, color = color, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), textAlign = TextAlign.Center)
 }
 
 @Composable
@@ -476,7 +477,7 @@ private fun InputField(label: String, value: String, onValueChange: (String) -> 
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, color = LedColors.TextSecondary) },
+        label = { Text(formatUiText(label), color = LedColors.TextSecondary) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         modifier = modifier,

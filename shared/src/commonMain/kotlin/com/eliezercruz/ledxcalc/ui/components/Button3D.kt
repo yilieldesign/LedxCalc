@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.dp
+import com.eliezercruz.ledxcalc.ui.formatUiText
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
 
 @Composable
@@ -78,7 +79,7 @@ fun Button3D(
             .padding(horizontal = 14.dp, vertical = 9.dp)
     ) {
         Text(
-            text = text,
+            text = formatUiText(text),
             style = MaterialTheme.typography.labelLarge,
             color = if (isSelected) Color.Black else LedColors.TextPrimary
         )

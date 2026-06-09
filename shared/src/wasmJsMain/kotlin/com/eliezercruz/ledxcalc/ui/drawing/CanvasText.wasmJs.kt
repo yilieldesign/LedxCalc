@@ -4,8 +4,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.nativeCanvas
 import org.jetbrains.skia.Font
-import org.jetbrains.skia.FontMgr
-import org.jetbrains.skia.FontStyle
 import org.jetbrains.skia.Paint as SkiaPaint
 
 actual fun DrawScope.drawCanvasText(
@@ -28,16 +26,16 @@ actual fun DrawScope.drawCanvasText(
         )
         isAntiAlias = true
     }
-    val style = if (bold) FontStyle.BOLD else FontStyle.NORMAL
-    val typeface = FontMgr.default.matchFamilyStyle("sans-serif", style)
-    val font = Font(typeface, textSizePx)
+    val font = Font(null, textSizePx)
+    val textWidth = font.measureTextWidth(text, skiaPaint)
+    val drawX = if (centerAlign) x - textWidth / 2f else x
     val canvas = drawContext.canvas.nativeCanvas
     if (rotateDegrees != 0f) {
         canvas.save()
-        canvas.rotate(rotateDegrees, x, y)
-        canvas.drawString(text, x, y, font, skiaPaint)
+        canvas.rotate(rotateDegrees, drawX, y)
+        canvas.drawString(text, drawX, y, font, skiaPaint)
         canvas.restore()
     } else {
-        canvas.drawString(text, x, y, font, skiaPaint)
+        canvas.drawString(text, drawX, y, font, skiaPaint)
     }
 }

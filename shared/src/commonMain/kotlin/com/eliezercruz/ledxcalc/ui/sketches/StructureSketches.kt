@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.eliezercruz.ledxcalc.domain.BasesLayout
 import com.eliezercruz.ledxcalc.domain.SupportCalculation
+import com.eliezercruz.ledxcalc.ui.formatUiText
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
 import com.eliezercruz.ledxcalc.ui.drawing.drawCanvasText
 import com.eliezercruz.ledxcalc.util.formatDouble
@@ -35,7 +36,7 @@ fun SketchSection(title: String, modifier: Modifier = Modifier, content: @Compos
         colors = CardDefaults.elevatedCardColors(containerColor = LedColors.Panel)
     ) {
         Text(
-            text = title,
+            text = formatUiText(title),
             color = LedColors.NeonCyan,
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
