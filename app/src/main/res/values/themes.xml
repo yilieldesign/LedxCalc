@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CalculoResoluciónYModulos" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Splash Screen para Android 12+ -->
+        <item name="android:windowSplashScreenBackground">@android:color/black</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/logo_calculadora</item>
+    </style>
+</resources>

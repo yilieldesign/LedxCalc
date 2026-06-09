@@ -1,0 +1,36 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Android / Kotlin build
+**/build/
+!**/src/**/build/
+*.apk
+*.aab
+*.dex
+
+# Node (Wasm toolchain)
+**/node_modules/
+.kotlin/
+
+# Secrets
+*.keystore
+*.jks
+.env
+.env.*
+
+# OS
+Thumbs.db
+Desktop.ini
