@@ -2,6 +2,8 @@ package com.eliezercruz.ledxcalc.ui.sketches
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -10,6 +12,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -17,13 +20,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.eliezercruz.ledxcalc.domain.BasesLayout
 import com.eliezercruz.ledxcalc.domain.SupportCalculation
 import com.eliezercruz.ledxcalc.ui.formatUiText
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
-import com.eliezercruz.ledxcalc.ui.drawing.drawCanvasText
 import com.eliezercruz.ledxcalc.util.formatDouble
 import kotlin.math.min
 
@@ -58,78 +61,85 @@ fun HoleSketch(
     modulesHigh: Int,
     modifier: Modifier = Modifier
 ) {
-    SketchCanvas(modifier, height = 200.dp) {
-        if (screenWidthFeet <= 0 || screenHeightFeet <= 0) return@SketchCanvas
-        val pad = 20.dp.toPx()
-        val labelH = 40.dp.toPx()
-        val footerH = 22.dp.toPx()
-        val availW = size.width - pad * 2
-        val availH = size.height - pad * 2 - labelH - footerH
-        val scale = min(availW / screenWidthFeet.toFloat(), availH / screenHeightFeet.toFloat())
-        val sw = screenWidthFeet.toFloat() * scale
-        val sh = screenHeightFeet.toFloat() * scale
-        val ox = (size.width - sw) / 2f
-        val oy = pad + labelH
-
-        val hw = holeWidthFeet.toFloat() * scale
-        val hh = holeHeightFeet.toFloat() * scale
-        val hx = ox + (sw - hw) / 2f
-        val hy = oy + (sh - hh) / 2f
-
-        // Marco exterior (estructura alrededor del hueco)
-        drawRect(Color(0xFF37474F), Offset(ox, oy), Size(sw, sh))
-        drawRect(Color(0xFF00E676), Offset(ox, oy), Size(sw, sh), style = Stroke(2.dp.toPx()))
-
-        // Paneles visibles detrás del hueco
-        drawHolePanelGrid(
-            left = hx,
-            top = hy,
-            width = hw,
-            height = hh,
-            columns = modulesAcross,
-            rows = modulesHigh
-        )
-
-        drawRect(
-            Color(0xFFFFD54F),
-            Offset(hx, hy),
-            Size(hw, hh),
-            style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)))
-        )
-
-        drawCanvasText(
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color.Black)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
             text = "Hueco de pantalla",
-            x = size.width / 2f,
-            y = pad,
-            textSizePx = 12.dp.toPx(),
             color = Color.White,
-            bold = true,
-            centerAlign = true
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
-        drawCanvasText(
+        Text(
             text = "con paneles",
-            x = size.width / 2f,
-            y = pad + 14.dp.toPx(),
-            textSizePx = 10.dp.toPx(),
             color = Color(0xFF80CBC4),
-            centerAlign = true
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
-        drawCanvasText(
-            text = "Pantalla ${formatDouble(screenWidthFeet, 1)}×${formatDouble(screenHeightFeet, 1)} ft",
-            x = size.width / 2f,
-            y = oy - 6.dp.toPx(),
-            textSizePx = 9.dp.toPx(),
-            color = Color(0xFFB0BEC5),
-            centerAlign = true
-        )
-        drawCanvasText(
+        if (screenWidthFeet > 0 && screenHeightFeet > 0) {
+            Text(
+                text = "Pantalla ${formatDouble(screenWidthFeet, 1)}×${formatDouble(screenHeightFeet, 1)} ft",
+                color = Color(0xFFB0BEC5),
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
+        ) {
+            if (screenWidthFeet <= 0 || screenHeightFeet <= 0) return@Canvas
+            val pad = 8.dp.toPx()
+            val availW = size.width - pad * 2
+            val availH = size.height - pad * 2
+            val scale = min(availW / screenWidthFeet.toFloat(), availH / screenHeightFeet.toFloat())
+            val sw = screenWidthFeet.toFloat() * scale
+            val sh = screenHeightFeet.toFloat() * scale
+            val ox = (size.width - sw) / 2f
+            val oy = (size.height - sh) / 2f
+
+            val hw = holeWidthFeet.toFloat() * scale
+            val hh = holeHeightFeet.toFloat() * scale
+            val hx = ox + (sw - hw) / 2f
+            val hy = oy + (sh - hh) / 2f
+
+            drawRect(Color(0xFF37474F), Offset(ox, oy), Size(sw, sh))
+            drawRect(Color(0xFF00E676), Offset(ox, oy), Size(sw, sh), style = Stroke(2.dp.toPx()))
+
+            drawHolePanelGrid(
+                left = hx,
+                top = hy,
+                width = hw,
+                height = hh,
+                columns = modulesAcross,
+                rows = modulesHigh
+            )
+
+            drawRect(
+                Color(0xFFFFD54F),
+                Offset(hx, hy),
+                Size(hw, hh),
+                style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)))
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
             text = "Hueco $holeWidthLabel × $holeHeightLabel ft",
-            x = size.width / 2f,
-            y = oy + sh + 14.dp.toPx(),
-            textSizePx = 12.dp.toPx(),
             color = Color(0xFFFFD54F),
-            bold = true,
-            centerAlign = true
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -221,23 +231,5 @@ fun TrussSketch(
             modulesAcross = modulesAcross,
             modulesHigh = modulesHigh
         )
-    }
-}
-
-@Composable
-private fun SketchCanvas(
-    modifier: Modifier = Modifier,
-    height: androidx.compose.ui.unit.Dp = 180.dp,
-    backgroundColor: Color = Color.Black,
-    content: androidx.compose.ui.graphics.drawscope.DrawScope.() -> Unit
-) {
-    Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(height)
-            .background(backgroundColor)
-            .padding(6.dp)
-    ) {
-        content()
     }
 }

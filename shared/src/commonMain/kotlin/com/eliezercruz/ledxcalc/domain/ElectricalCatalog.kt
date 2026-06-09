@@ -45,6 +45,22 @@ object ElectricalCatalog {
     private const val MIN_PITCH_FACTOR = 0.55
     private const val MAX_PITCH_FACTOR = 2.5
 
+    private const val INDOOR_OUTDOOR_WATT_FACTOR = 120.0 / 180.0
+
+    private val outdoor1000x1000ByPitch: Map<Double, Pair<Double, Double>> = mapOf(
+        3.91 to (320.0 to 800.0),
+        4.81 to (320.0 to 800.0),
+        5.0 to (300.0 to 750.0),
+        5.95 to (320.0 to 800.0),
+        6.67 to (300.0 to 750.0),
+        8.0 to (340.0 to 850.0),
+        10.0 to (340.0 to 850.0),
+        16.0 to (260.0 to 650.0)
+    )
+
+    private const val NOTA_1000x1000_OUTDOOR =
+        "Gabinete gran formato exterior · consumo promedio 300–400 W, hasta 850 W/m² en alto brillo."
+
     val indoor500x500 = ElectricalSpec(
         wattsPromedio = 120.0,
         wattsMax = 300.0,
@@ -109,6 +125,7 @@ object ElectricalCatalog {
     fun referencePitch(widthMm: Int, heightMm: Double): Double = when {
         widthMm == 500 && heightMm == 500.0 -> 3.91
         widthMm == 500 && heightMm == 1000.0 -> 3.91
+        widthMm == 1000 && heightMm == 1000.0 -> 3.91
         widthMm == 960 && heightMm == 960.0 -> 4.0
         widthMm == 640 && heightMm == 640.0 -> 2.0
         widthMm == 600 && heightMm == 337.5 -> 1.56
@@ -128,6 +145,9 @@ object ElectricalCatalog {
         heightMm: Double,
         environment: CabinetEnvironment
     ): ElectricalSpec {
+        if (widthMm == 1000 && heightMm == 1000.0) {
+            return spec1000x1000(pitch, environment, model)
+        }
         val base = baseForCabinet(widthMm, heightMm, environment)
         val factor = pitchFactor(pitch, widthMm, heightMm)
         val spec = base.scaled(factor)
@@ -162,7 +182,30 @@ object ElectricalCatalog {
         baseForCabinet(widthMm, heightMm, environment)
 
     fun supportsEnvironmentToggle(widthMm: Int, heightMm: Double): Boolean =
-        widthMm == 500 && (heightMm == 500.0 || heightMm == 1000.0)
+        (widthMm == 500 && (heightMm == 500.0 || heightMm == 1000.0)) ||
+            (widthMm == 1000 && heightMm == 1000.0)
+
+    private fun spec1000x1000(
+        pitch: Double,
+        environment: CabinetEnvironment,
+        model: String
+    ): ElectricalSpec {
+        val (wProm, wMax) = outdoor1000x1000ByPitch[pitch] ?: (320.0 to 800.0)
+        val outdoor = ElectricalSpec.fromWatts(wProm, wMax, NOTA_1000x1000_OUTDOOR)
+        val spec = if (environment == CabinetEnvironment.OUTDOOR) {
+            outdoor
+        } else {
+            outdoor.scaled(
+                factor = INDOOR_OUTDOOR_WATT_FACTOR,
+                notaOverride = "Estimado indoor (~67% del consumo exterior gran formato)."
+            )
+        }
+        val pitchLabel = if (pitch > 0.0) "P${formatPitch(pitch)}" else model
+        return spec.copy(
+            nota = "$model ($pitchLabel) · ${formatWatts(spec.wattsPromedio)} W prom / " +
+                "${formatWatts(spec.wattsMax)} W máx por gabinete · ${environment.label}."
+        )
+    }
 
     private fun formatWatts(value: Double): String = value.roundToInt().toString()
 

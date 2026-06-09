@@ -5,6 +5,7 @@ import com.eliezercruz.ledxcalc.util.formatDouble
 enum class ModulePhysicalCategory(val label: String) {
     SIZE_500x500("Gabinetes 500 × 500 mm"),
     SIZE_500x1000("Gabinetes 500 × 1000 mm"),
+    SIZE_1000x1000("Gabinetes 1000 × 1000 mm"),
     OTHER_FORMATS("Otros formatos fijos y publicidad");
 
     fun modules(): List<ModuleSpec> = ModuleCatalog.forCategory(this)
@@ -97,6 +98,18 @@ object ModuleCatalog {
         cabinet(ModulePhysicalCategory.SIZE_500x1000, "P10.0", 10.0, 500, 1000.0, 50, 100, 5000)
     )
 
+    // ── Gabinetes Grandes de Exterior 1000×1000 mm (gran formato) ──
+    private val modules1000x1000: List<ModuleSpec> = listOf(
+        cabinet(ModulePhysicalCategory.SIZE_1000x1000, "P3.91", 3.91, 1000, 1000.0, 256, 256, 65536),
+        cabinet(ModulePhysicalCategory.SIZE_1000x1000, "P4.81", 4.81, 1000, 1000.0, 208, 208, 43264),
+        cabinet(ModulePhysicalCategory.SIZE_1000x1000, "P5.0", 5.0, 1000, 1000.0, 200, 200, 40000),
+        cabinet(ModulePhysicalCategory.SIZE_1000x1000, "P5.95", 5.95, 1000, 1000.0, 168, 168, 28224),
+        cabinet(ModulePhysicalCategory.SIZE_1000x1000, "P6.67", 6.67, 1000, 1000.0, 150, 150, 22500),
+        cabinet(ModulePhysicalCategory.SIZE_1000x1000, "P8.0", 8.0, 1000, 1000.0, 125, 125, 15625),
+        cabinet(ModulePhysicalCategory.SIZE_1000x1000, "P10.0", 10.0, 1000, 1000.0, 100, 100, 10000),
+        cabinet(ModulePhysicalCategory.SIZE_1000x1000, "P16.0", 16.0, 1000, 1000.0, 62, 62, 3844)
+    )
+
     // ── Otros formatos fijos y publicidad ─────────────────────────
     private val otherFormats: List<ModuleSpec> = listOf(
         cabinet(ModulePhysicalCategory.OTHER_FORMATS, "P4.0 (Fijo)", 4.0, 960, 960.0, 240, 240, 57600),
@@ -117,10 +130,11 @@ object ModuleCatalog {
     fun forCategory(category: ModulePhysicalCategory): List<ModuleSpec> = when (category) {
         ModulePhysicalCategory.SIZE_500x500 -> modules500x500
         ModulePhysicalCategory.SIZE_500x1000 -> modules500x1000
+        ModulePhysicalCategory.SIZE_1000x1000 -> modules1000x1000
         ModulePhysicalCategory.OTHER_FORMATS -> otherFormats
     }
 
-    fun allPresets(): List<ModuleSpec> = modules500x500 + modules500x1000 + otherFormats
+    fun allPresets(): List<ModuleSpec> = modules500x500 + modules500x1000 + modules1000x1000 + otherFormats
 
     fun findById(id: String): ModuleSpec? = allPresets().find { it.id == id }
 

@@ -324,7 +324,7 @@ private fun ResolutionResults(
 
     LedPanel(accentColor = LedColors.NeonMagenta, glowElevation = 16.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("🔲 ${moduleSpec.title}", color = LedColors.NeonCyan, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            Text(formatUiText("🔲 ${moduleSpec.title}"), color = LedColors.NeonCyan, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             if (moduleSpec.pitch > 0) {
                 ResultLine("📐 Gabinete: ${moduleSpec.physicalLabel} · Pitch ${moduleSpec.pitch}", LedColors.NeonTeal, MaterialTheme.typography.bodyMedium)
             }
@@ -578,7 +578,7 @@ private fun SavedModulesDialog(
                 modules.forEach { module ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         TextButton(onClick = { onSelect(module) }) { Text(module.title, textAlign = TextAlign.Start) }
-                        TextButton(onClick = { onDelete(module.id) }) { Text("🗑") }
+                        TextButton(onClick = { onDelete(module.id) }) { Text(formatUiText("🗑")) }
                     }
                 }
             }

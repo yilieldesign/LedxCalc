@@ -2,7 +2,10 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import com.eliezercruz.ledxcalc.LedxCalcApp
 import com.eliezercruz.ledxcalc.platform.createPlatformContext
+import com.eliezercruz.ledxcalc.ui.drawing.SketchFontBootstrap
 import kotlinx.browser.document
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.configureWebResources
 
@@ -11,8 +14,11 @@ fun main() {
     configureWebResources {
         resourcePathMapping { path -> "./$path" }
     }
-    document.getElementById("loading")?.remove()
-    ComposeViewport(document.getElementById("ComposeTarget")!!) {
-        LedxCalcApp(platformContext = createPlatformContext())
+    MainScope().launch {
+        SketchFontBootstrap.ensureLoaded()
+        document.getElementById("loading")?.remove()
+        ComposeViewport(document.getElementById("ComposeTarget")!!) {
+            LedxCalcApp(platformContext = createPlatformContext())
+        }
     }
 }

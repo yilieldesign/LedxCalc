@@ -3,6 +3,7 @@ package com.eliezercruz.ledxcalc.domain
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.math.roundToInt
 
 class LedCalculatorTest {
     @Test
@@ -17,7 +18,27 @@ class LedCalculatorTest {
     fun catalogHasExpectedCounts() {
         assertEquals(13, ModuleCatalog.forCategory(ModulePhysicalCategory.SIZE_500x500).size)
         assertEquals(8, ModuleCatalog.forCategory(ModulePhysicalCategory.SIZE_500x1000).size)
+        assertEquals(8, ModuleCatalog.forCategory(ModulePhysicalCategory.SIZE_1000x1000).size)
         assertEquals(13, ModuleCatalog.forCategory(ModulePhysicalCategory.OTHER_FORMATS).size)
+    }
+
+    @Test
+    fun outdoor1000x1000ElectricalValues() {
+        val spec = ModuleCatalog.findByModel(ModulePhysicalCategory.SIZE_1000x1000, "P3.91")!!
+        assertEquals(256, spec.widthPx)
+        assertEquals(256, spec.heightPx)
+        assertEquals(1000, spec.widthMm)
+        assertEquals(1000.0, spec.heightMm)
+
+        val indoor = ElectricalCatalog.forModel("P3.91", 3.91, 1000, 1000.0, CabinetEnvironment.INDOOR)
+        assertEquals(213, indoor.wattsPromedio.roundToInt())
+        assertEquals(533, indoor.wattsMax.roundToInt())
+
+        val outdoor = ElectricalCatalog.forModel("P3.91", 3.91, 1000, 1000.0, CabinetEnvironment.OUTDOOR)
+        assertEquals(320.0, outdoor.wattsPromedio)
+        assertEquals(800.0, outdoor.wattsMax)
+        assertEquals(7.27, outdoor.amps110vMax, 0.01)
+        assertEquals(3.64, outdoor.amps220vMax, 0.01)
     }
 
     @Test
