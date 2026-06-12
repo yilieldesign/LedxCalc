@@ -34,3 +34,6 @@ local.properties
 # OS
 Thumbs.db
 Desktop.ini
+
+.vercel
+!.vercel/project.json

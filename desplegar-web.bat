@@ -156,7 +156,10 @@ echo  5. Tu URL: https://TU_USUARIO.github.io/%REPO_NAME%/
 echo  6. Abre esa URL en Safari del iPhone
 echo.
 echo  NOTA: Vercel compila con scripts/vercel-build.sh al hacer push.
-echo        GitHub Actions tambien publica en Pages y puede enviar a Vercel.
+echo        O ejecuta scripts\deploy-vercel-prebuilt.bat para subir el build.
+echo.
+echo  iPhone: abre https://ledx-calc.vercel.app/ en Safari
+echo          Compartir -^> Anadir a pantalla de inicio
 echo.
 pause
 goto MAIN_MENU
