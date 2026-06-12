@@ -187,13 +187,24 @@ fun ResolutionCalculatorScreen(
             }
         }
 
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
-            Button3D("➕ Crear Módulo", true) { showCreateDialog = true }
-            if (useCustomModule) {
-                Button3D("📋 Catálogo", false) { useCustomModule = false }
+        Column(
+            Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+            ) {
+                Button3D("➕ Crear Módulo", true) { showCreateDialog = true }
+                if (useCustomModule) {
+                    Button3D("📋 Catálogo", false) { useCustomModule = false }
+                }
+                Button3D("💾 Guardados", false) { showSavedModules = true }
             }
-            Button3D("💾 Guardados", false) { showSavedModules = true }
-            Button3D("📋 Historial", false) { showHistory = true }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Button3D("📋 Historial", false) { showHistory = true }
+            }
         }
 
         UnitSelector(selectedUnit) {
@@ -439,7 +450,10 @@ private fun ResolutionResults(
 
             if (sketchSelection.mounting == StructureMounting.FLOOR_BASES) {
                 SketchSection("🏗️ Bases de piso y escaleras") {
-                    BasesDistributionList(support = result.supportCalc)
+                    BasesDistributionList(
+                        support = result.supportCalc,
+                        ghostModules = result.ghostModules
+                    )
                     BasesSketch(
                         modulesAcross = result.modulesAcross,
                         modulesHigh = result.structureModulesHigh,

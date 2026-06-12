@@ -1,5 +1,6 @@
 package com.eliezercruz.ledxcalc.domain
 
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 import com.eliezercruz.ledxcalc.util.formatDouble
@@ -85,6 +86,32 @@ object LedCalculator {
 
     fun integerSanitized(input: String): String = input.filter { it.isDigit() }
 
+    /**
+     * Gabinetes necesarios en un eje usando milímetros (ancho o alto del gabinete).
+     * - Entero exacto → ese valor (ej. 5 m / 500 mm ancho = 10).
+     * - Medio gabinete exacto → no redondear arriba (ej. 2,5 m / 1000 mm alto = 2).
+     * - Resto > medio gabinete → redondear arriba para cubrir.
+     */
+    internal fun modulesForDimension(dimensionMeters: Double, moduleSizeMm: Double): Int {
+        require(moduleSizeMm > 0.0) { "moduleSizeMm must be positive" }
+        val ratio = (dimensionMeters * 1000.0) / moduleSizeMm
+        val floorCount = floor(ratio).toInt()
+        val fractional = ratio - floorCount
+        val tolerance = 1e-6
+        return when {
+            fractional <= tolerance || fractional >= 1.0 - tolerance -> floorCount.coerceAtLeast(1)
+            abs(fractional - 0.5) <= tolerance -> floorCount.coerceAtLeast(1)
+            else -> ceil(ratio).toInt().coerceAtLeast(1)
+        }
+    }
+
+    /** Ancho del gabinete (mm) → columnas. Alto del gabinete (mm) → filas. */
+    internal fun modulesAcrossForSpec(widthMeters: Double, moduleSpec: ModuleSpec): Int =
+        modulesForDimension(widthMeters, moduleSpec.widthMm.toDouble())
+
+    internal fun modulesHighForSpec(heightMeters: Double, moduleSpec: ModuleSpec): Int =
+        modulesForDimension(heightMeters, moduleSpec.heightMm)
+
     fun calculate(
         moduleSpec: ModuleSpec,
         widthMeters: Double?,
@@ -93,8 +120,8 @@ object LedCalculator {
         environment: CabinetEnvironment = CabinetEnvironment.INDOOR,
         ghostModules: Int = 0
     ): LedCalculationResult? {
-        val modulesAcross = widthMeters?.let { ceil(it / moduleSpec.widthMeters).toInt() } ?: return null
-        val modulesHigh = heightMeters?.let { ceil(it / moduleSpec.heightMeters).toInt() } ?: return null
+        val modulesAcross = widthMeters?.let { modulesAcrossForSpec(it, moduleSpec) } ?: return null
+        val modulesHigh = heightMeters?.let { modulesHighForSpec(it, moduleSpec) } ?: return null
         if (modulesAcross <= 0 || modulesHigh <= 0) return null
 
         val ghost = ghostModules.coerceAtLeast(0)
@@ -103,9 +130,9 @@ object LedCalculator {
         val totalModules = modulesAcross * modulesHigh
         val widthPixels = moduleSpec.widthPx * modulesAcross
         val heightPixels = moduleSpec.heightPx * modulesHigh
-        val coveredWidthMeters = modulesAcross * moduleSpec.widthMeters
-        val coveredHeightMeters = modulesHigh * moduleSpec.heightMeters
-        val structureHeightMeters = structureModulesHigh * moduleSpec.heightMeters
+        val coveredWidthMeters = modulesAcross * (moduleSpec.widthMm / 1000.0)
+        val coveredHeightMeters = modulesHigh * (moduleSpec.heightMm / 1000.0)
+        val structureHeightMeters = structureModulesHigh * (moduleSpec.heightMm / 1000.0)
         val coverageHeightMeters = if (ghost > 0) structureHeightMeters else coveredHeightMeters
         val groupSizeForSpec = moduleSpec.modulesPerSignalLine
         val maxColumnsPerLine = (groupSizeForSpec / modulesHigh).coerceAtLeast(1)

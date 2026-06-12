@@ -15,11 +15,19 @@ import com.eliezercruz.ledxcalc.domain.BasesDistribution
 import com.eliezercruz.ledxcalc.domain.SupportCalculation
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
 
+private fun ghostGapLegend(ghostModules: Int): String =
+    if (ghostModules == 1) {
+        "Dejando hueco de 1 módulo"
+    } else {
+        "Dejando hueco de $ghostModules módulos"
+    }
+
 @Composable
 fun BasesDistributionList(
     support: SupportCalculation,
     modifier: Modifier = Modifier,
-    showStairs: Boolean = true
+    showStairs: Boolean = true,
+    ghostModules: Int = 0
 ) {
     val baseLines = BasesDistribution.baseLines(support)
     if (baseLines.isEmpty()) return
@@ -58,6 +66,18 @@ fun BasesDistributionList(
                     textAlign = TextAlign.Center
                 )
             }
+        }
+        if (ghostModules > 0) {
+            Text(
+                text = ghostGapLegend(ghostModules),
+                color = LedColors.NeonPurple,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

@@ -105,6 +105,44 @@ class LedCalculatorTest {
     }
 
     @Test
+    fun modules500x1000_fiveByTwoPointFiveMeters_usesAncho500Alto1000() {
+        val spec = ModuleCatalog.findByModel(ModulePhysicalCategory.SIZE_500x1000, "P3.91")!!
+        assertEquals(500, spec.widthMm)
+        assertEquals(1000.0, spec.heightMm)
+        assertEquals(128, spec.widthPx)
+        assertEquals(256, spec.heightPx)
+
+        val result = LedCalculator.calculate(spec, 5.0, 2.5, MeasurementUnit.METERS)
+        requireNotNull(result)
+        // Ancho pantalla 5 m ÷ 500 mm = 10 columnas (no 5)
+        assertEquals(10, result.modulesAcross)
+        // Alto pantalla 2,5 m ÷ 1000 mm = 2 filas (medio gabinete exacto, no 3)
+        assertEquals(2, result.modulesHigh)
+        assertEquals(20, result.totalModules)
+        assertEquals(1280, result.widthPixels)
+        assertEquals(512, result.heightPixels)
+        assertEquals(5.0, result.coveredWidthMeters)
+        assertEquals(2.0, result.coveredHeightMeters)
+    }
+
+    @Test
+    fun modules500x1000_twoPointFiveSquare_fiveColumnsTwoRows() {
+        val spec = ModuleCatalog.findByModel(ModulePhysicalCategory.SIZE_500x1000, "P3.91")!!
+        val result = LedCalculator.calculate(spec, 2.5, 2.5, MeasurementUnit.METERS)
+        requireNotNull(result)
+        assertEquals(5, result.modulesAcross)
+        assertEquals(2, result.modulesHigh)
+    }
+
+    @Test
+    fun modulesForDimension_stillCeilsWhenMoreThanHalfModuleNeeded() {
+        assertEquals(3, LedCalculator.modulesForDimension(2.6, 1000.0))
+        assertEquals(11, LedCalculator.modulesForDimension(5.1, 500.0))
+        assertEquals(10, LedCalculator.modulesForDimension(5.0, 500.0))
+        assertEquals(2, LedCalculator.modulesForDimension(2.5, 1000.0))
+    }
+
+    @Test
     fun ghostModulesAffectStructureNotLedCount() {
         val spec = ModuleCatalog.findByModel(ModulePhysicalCategory.SIZE_500x500, "P3.91")!!
         val withoutGhost = LedCalculator.calculate(spec, 5.0, 2.0, MeasurementUnit.METERS, ghostModules = 0)

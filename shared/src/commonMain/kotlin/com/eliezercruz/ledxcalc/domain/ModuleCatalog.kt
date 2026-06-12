@@ -3,9 +3,9 @@ package com.eliezercruz.ledxcalc.domain
 import com.eliezercruz.ledxcalc.util.formatDouble
 
 enum class ModulePhysicalCategory(val label: String) {
-    SIZE_500x500("Gabinetes 500 × 500 mm"),
-    SIZE_500x1000("Gabinetes 500 × 1000 mm"),
-    SIZE_1000x1000("Gabinetes 1000 × 1000 mm"),
+    SIZE_500x500("Gabinetes 500 × 500 mm (ancho × alto)"),
+    SIZE_500x1000("Gabinetes 500 × 1000 mm (ancho × alto)"),
+    SIZE_1000x1000("Gabinetes 1000 × 1000 mm (ancho × alto)"),
     OTHER_FORMATS("Otros formatos fijos y publicidad");
 
     fun modules(): List<ModuleSpec> = ModuleCatalog.forCategory(this)

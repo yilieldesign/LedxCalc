@@ -199,19 +199,38 @@ fun BasesSketch(
     ghostModules: Int = 0
 ) {
     val stairBlocks = BasesLayout.compute(modulesAcross, modulesHigh, support)?.stairBlocks?.size ?: 1
-    Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(basesSketchHeight(modulesHigh, stairBlocks))
-            .background(BasesSketchColors.canvasBg)
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        drawBasesSketchContent(
-            modulesAcross = modulesAcross,
-            structureModulesHigh = modulesHigh,
-            ledModulesHigh = ledModulesHigh,
-            ghostModules = ghostModules,
-            support = support
-        )
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(basesSketchHeight(modulesHigh, stairBlocks))
+                .background(BasesSketchColors.canvasBg)
+        ) {
+            drawBasesSketchContent(
+                modulesAcross = modulesAcross,
+                structureModulesHigh = modulesHigh,
+                ledModulesHigh = ledModulesHigh,
+                ghostModules = ghostModules,
+                support = support
+            )
+        }
+        if (ghostModules > 0) {
+            Text(
+                text = formatUiText(
+                    if (ghostModules == 1) "1 módulo fantasma" else "$ghostModules módulos fantasma"
+                ),
+                color = LedColors.NeonPurple,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp, bottom = 2.dp)
+            )
+        }
     }
 }
 

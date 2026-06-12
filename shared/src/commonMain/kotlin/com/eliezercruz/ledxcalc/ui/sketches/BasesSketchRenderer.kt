@@ -34,6 +34,31 @@ internal object BasesSketchColors {
 
 private data class IsoDepth(val dx: Float, val dy: Float)
 
+/** Constantes compartidas entre altura del canvas y posicionamiento del dibujo. */
+private object BasesSketchMetrics {
+    val pad = 12.dp
+    val titleH = 18.dp
+    val gridGapBelowTitle = 6.dp
+    val screenLabelAbove = 12.dp
+    val gapBelowGrid = 10.dp
+    val baseFrontExtra = 14.dp
+    val basesBannerOffset = 10.dp
+    val baseBannerLabelH = 28.dp
+    val bottomInset = 12.dp
+    val minCellHeight = 22.dp
+
+    fun gridTop(): Dp = pad + titleH + gridGapBelowTitle + screenLabelAbove
+
+    /** Espacio bajo la rejilla LED/fantasma: gap + etiquetas de bases. */
+    fun fixedBelow(): Dp =
+        gapBelowGrid + baseFrontExtra + basesBannerOffset + baseBannerLabelH + bottomInset
+
+    fun sketchHeight(structureModulesHigh: Int): Dp {
+        val rows = structureModulesHigh.coerceAtLeast(1)
+        return gridTop() + minCellHeight * rows + fixedBelow()
+    }
+}
+
 /** Etiqueta legible sobre fondo claro u oscuro: pastilla clara + texto oscuro. */
 private fun DrawScope.drawSketchLabel(
     text: String,
@@ -221,11 +246,12 @@ internal fun DrawScope.drawBasesSketchContent(
 ) {
     val layout = BasesLayout.compute(modulesAcross, structureModulesHigh, support) ?: return
 
-    val pad = 12.dp.toPx()
-    val titleH = 18.dp.toPx()
-    val baseFrontExtra = 14.dp.toPx()
-    val baseLabelH = 28.dp.toPx()
-    val gridTop = pad + titleH + 6.dp.toPx()
+    val pad = BasesSketchMetrics.pad.toPx()
+    val titleH = BasesSketchMetrics.titleH.toPx()
+    val baseFrontExtra = BasesSketchMetrics.baseFrontExtra.toPx()
+    val gridTop = BasesSketchMetrics.gridTop().toPx()
+    val fixedBelow = BasesSketchMetrics.fixedBelow().toPx()
+    val gapBelowGrid = BasesSketchMetrics.gapBelowGrid.toPx()
 
     drawRect(BasesSketchColors.canvasBg, Offset(0f, 0f), Size(size.width, size.height))
 
@@ -235,17 +261,19 @@ internal fun DrawScope.drawBasesSketchContent(
         dx = min(cellW * 0.42f, 28.dp.toPx()),
         dy = min(cellW * 0.28f, 18.dp.toPx())
     )
-    val baseDepthY = depth.dy + baseFrontExtra
 
-    val fixedBelow = baseDepthY + baseLabelH + pad + 6.dp.toPx()
-    val availableGridH = (size.height - gridTop - fixedBelow).coerceAtLeast(56.dp.toPx())
-    val cellH = availableGridH / structureModulesHigh.coerceAtLeast(1)
+    val availableGridH = (size.height - gridTop - fixedBelow).coerceAtLeast(0f)
+    val cellH = if (structureModulesHigh > 0) {
+        availableGridH / structureModulesHigh
+    } else {
+        0f
+    }
     val gridH = cellH * structureModulesHigh
     val ledGridH = cellH * ledModulesHigh.coerceAtLeast(1)
     val gridLeft = pad
     val gridRight = gridLeft + modulesAcross * cellW
     val screenBottom = gridTop + gridH
-    val baseFrontY = screenBottom + 10.dp.toPx()
+    val baseFrontY = screenBottom + gapBelowGrid
     val baseBackY = baseFrontY - depth.dy
     val ladderW = min(cellW * 0.62f, 22.dp.toPx())
 
@@ -321,13 +349,6 @@ internal fun DrawScope.drawBasesSketchContent(
             Size(ghostW, ghostH),
             style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f)))
         )
-        val ghostLabel = if (ghostModules == 1) "Módulo fantasma" else "Módulos fantasma ($ghostModules)"
-        drawSketchLabel(
-            text = ghostLabel,
-            x = gridLeft + modulesAcross * cellW / 2f,
-            y = ghostTop + ghostH / 2f,
-            textSizePx = min(cellW * 0.34f, 11.dp.toPx()).coerceAtLeast(9.dp.toPx())
-        )
     }
 
     // 3. Escaleras (altura total estructura)
@@ -374,7 +395,7 @@ internal fun DrawScope.drawBasesSketchContent(
     drawSketchLabel(
         text = "BASES DE PISO",
         x = gridLeft + modulesAcross * cellW / 2f + depth.dx * 0.2f,
-        y = baseFrontY + baseFrontExtra + 10.dp.toPx(),
+        y = baseFrontY + baseFrontExtra + BasesSketchMetrics.basesBannerOffset.toPx(),
         textSizePx = 13.dp.toPx()
     )
 
@@ -400,5 +421,9 @@ internal fun DrawScope.drawBasesSketchContent(
     )
 }
 
-internal fun basesSketchHeight(modulesHigh: Int, stairBlocks: Int): Dp =
-    (300 + modulesHigh * 24 + stairBlocks * 8).coerceAtMost(440).dp
+internal fun basesSketchHeight(modulesHigh: Int, stairBlocks: Int = 1): Dp {
+    val rows = modulesHigh.coerceAtLeast(1)
+    // Escaleras apiladas: un poco más de altura por bloque extra cuando hay muchas filas.
+    val stairExtra = (stairBlocks - 1).coerceAtLeast(0) * 4
+    return BasesSketchMetrics.sketchHeight(rows) + stairExtra.dp
+}
