@@ -25,6 +25,11 @@ internal object BasesSketchColors {
     val unitDivider = Color(0xFF9E9E9E)
     val labelDark = Color(0xFF37474F)
     val labelLight = Color(0xFFECEFF1)
+    /** Relleno zona módulo(s) fantasma — distinto del fondo azul y de la pantalla LED. */
+    val ghostFill = Color(0xFFE8D5F5)
+    val ghostFillStripe = Color(0xFFD4B8EB)
+    val ghostOutline = Color(0xFF7B1FA2)
+    val ghostDivider = Color(0xFF9C27B0).copy(alpha = 0.45f)
 }
 
 private data class IsoDepth(val dx: Float, val dy: Float)
@@ -272,34 +277,49 @@ internal fun DrawScope.drawBasesSketchContent(
     if (ghostModules > 0) {
         val ghostTop = gridTop + ledGridH
         val ghostH = cellH * ghostModules
+        val ghostW = modulesAcross * cellW
         drawRect(
-            Color(0xFFECEFF1).copy(alpha = 0.55f),
+            BasesSketchColors.ghostFill,
             Offset(gridLeft, ghostTop),
-            Size(modulesAcross * cellW, ghostH)
+            Size(ghostW, ghostH)
         )
+        // Franjas horizontales suaves para marcar gabinetes vacíos
+        var stripeY = ghostTop
+        var stripeIdx = 0
+        while (stripeY < ghostTop + ghostH) {
+            if (stripeIdx % 2 == 1) {
+                drawRect(
+                    BasesSketchColors.ghostFillStripe.copy(alpha = 0.55f),
+                    Offset(gridLeft, stripeY),
+                    Size(ghostW, min(cellH, ghostTop + ghostH - stripeY))
+                )
+            }
+            stripeY += cellH
+            stripeIdx++
+        }
         for (c in 1 until modulesAcross) {
             val x = gridLeft + c * cellW
             drawLine(
-                BasesSketchColors.unitDivider.copy(alpha = 0.5f),
+                BasesSketchColors.ghostDivider,
                 Offset(x, ghostTop),
                 Offset(x, ghostTop + ghostH),
-                strokeWidth = 0.8.dp.toPx()
+                strokeWidth = 1.dp.toPx()
             )
         }
         for (r in 1 until ghostModules) {
             val y = ghostTop + r * cellH
             drawLine(
-                BasesSketchColors.unitDivider.copy(alpha = 0.5f),
+                BasesSketchColors.ghostDivider,
                 Offset(gridLeft, y),
                 Offset(gridRight, y),
-                strokeWidth = 0.8.dp.toPx()
+                strokeWidth = 1.dp.toPx()
             )
         }
         drawRect(
-            BasesSketchColors.screenOutline.copy(alpha = 0.7f),
+            BasesSketchColors.ghostOutline,
             Offset(gridLeft, ghostTop),
-            Size(modulesAcross * cellW, ghostH),
-            style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f)))
+            Size(ghostW, ghostH),
+            style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f)))
         )
         val ghostLabel = if (ghostModules == 1) "Módulo fantasma" else "Módulos fantasma ($ghostModules)"
         drawSketchLabel(
