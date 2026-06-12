@@ -155,7 +155,8 @@ echo  4. Pesta?a Actions - espera Deploy Web (Wasm) en verde
 echo  5. Tu URL: https://TU_USUARIO.github.io/%REPO_NAME%/
 echo  6. Abre esa URL en Safari del iPhone
 echo.
-echo  NOTA: Vercel no compila Kotlin. GitHub Actions si.
+echo  NOTA: Vercel compila con scripts/vercel-build.sh al hacer push.
+echo        GitHub Actions tambien publica en Pages y puede enviar a Vercel.
 echo.
 pause
 goto MAIN_MENU

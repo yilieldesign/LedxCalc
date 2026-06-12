@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "echo skip",
-  "buildCommand": "echo skip",
+  "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": "webApp/build/dist/wasmJs/productionExecutable",
   "headers": [
     {
