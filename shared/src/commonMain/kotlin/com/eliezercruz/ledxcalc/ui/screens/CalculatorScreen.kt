@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -22,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,9 +32,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,6 +76,7 @@ import com.eliezercruz.ledxcalc.ui.sketches.ModuleSketch
 import com.eliezercruz.ledxcalc.ui.sketches.SketchSection
 import com.eliezercruz.ledxcalc.ui.sketches.TrussSketch
 import com.eliezercruz.ledxcalc.ui.formatUiText
+import com.eliezercruz.ledxcalc.ui.rememberKeyboardDismissHandler
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
 import com.eliezercruz.ledxcalc.resources.Res
 import com.eliezercruz.ledxcalc.resources.logo_calculadora
@@ -84,6 +94,7 @@ fun ResolutionCalculatorScreen(
 ) {
     var widthInput by rememberSaveable { mutableStateOf("") }
     var heightInput by rememberSaveable { mutableStateOf("") }
+    var ghostModulesInput by rememberSaveable { mutableStateOf("") }
     var selectedUnitKey by rememberSaveable { mutableStateOf(MeasurementUnit.METERS.name) }
     var selectedCategoryKey by rememberSaveable { mutableStateOf(ModulePhysicalCategory.SIZE_500x500.name) }
     var selectedModuleId by rememberSaveable { mutableStateOf(ModuleCatalog.defaultModuleId(ModulePhysicalCategory.SIZE_500x500)) }
@@ -105,14 +116,36 @@ fun ResolutionCalculatorScreen(
     val selectedCategory = ModulePhysicalCategory.valueOf(selectedCategoryKey)
     val widthMeters = widthInput.toDoubleOrNull()?.let { LedCalculator.convertToMeters(selectedUnit, it) }
     val heightMeters = heightInput.toDoubleOrNull()?.let { LedCalculator.convertToMeters(selectedUnit, it) }
+    val ghostModules = ghostModulesInput.toIntOrNull()?.coerceAtLeast(0) ?: 0
     val catalogModule = ModuleCatalog.findById(selectedModuleId)
         ?: ModuleCatalog.forCategory(selectedCategory).firstOrNull()
     val activeSpec = if (useCustomModule) customSpec else catalogModule
+    val dismissKeyboard = rememberKeyboardDismissHandler()
+    val scrollState = rememberScrollState()
+    val heightFocusRequester = remember { FocusRequester() }
+    val dismissKeyboardOnScroll = remember(dismissKeyboard) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput && available != Offset.Zero) {
+                    dismissKeyboard()
+                }
+                return Offset.Zero
+            }
+        }
+    }
+    val hasValidDimensions = widthMeters != null && heightMeters != null && activeSpec != null
+
+    LaunchedEffect(hasValidDimensions) {
+        if (hasValidDimensions) {
+            dismissKeyboard()
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .nestedScroll(dismissKeyboardOnScroll)
+            .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
@@ -130,10 +163,12 @@ fun ResolutionCalculatorScreen(
                 selectedCategory = selectedCategory,
                 selectedModule = catalogModule,
                 onCategorySelected = { category ->
+                    dismissKeyboard()
                     selectedCategoryKey = category.name
                     selectedModuleId = ModuleCatalog.defaultModuleId(category)
                 },
                 onModuleSelected = { module ->
+                    dismissKeyboard()
                     selectedModuleId = module.id
                     useCustomModule = false
                 }
@@ -161,7 +196,10 @@ fun ResolutionCalculatorScreen(
             Button3D("📋 Historial", false) { showHistory = true }
         }
 
-        UnitSelector(selectedUnit) { selectedUnitKey = it.name }
+        UnitSelector(selectedUnit) {
+            dismissKeyboard()
+            selectedUnitKey = it.name
+        }
 
         LedPanel(accentColor = LedColors.NeonBlue) {
             Row(
@@ -170,24 +208,44 @@ fun ResolutionCalculatorScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 InputField(
-                    "📏 Ancho (${selectedUnit.shortLabel})",
-                    widthInput,
-                    { widthInput = LedCalculator.decimalSanitized(it) },
-                    Modifier.weight(1f)
+                    label = "📏 Ancho (${selectedUnit.shortLabel})",
+                    value = widthInput,
+                    onValueChange = { widthInput = LedCalculator.decimalSanitized(it) },
+                    modifier = Modifier.weight(1f),
+                    imeAction = ImeAction.Next,
+                    onImeNext = { heightFocusRequester.requestFocus() }
                 )
                 Text("×", style = MaterialTheme.typography.titleLarge, color = LedColors.NeonCyan)
                 InputField(
-                    "📐 Alto (${selectedUnit.shortLabel})",
-                    heightInput,
-                    { heightInput = LedCalculator.decimalSanitized(it) },
-                    Modifier.weight(1f)
+                    label = "📐 Alto (${selectedUnit.shortLabel})",
+                    value = heightInput,
+                    onValueChange = { heightInput = LedCalculator.decimalSanitized(it) },
+                    modifier = Modifier.weight(1f).focusRequester(heightFocusRequester),
+                    imeAction = ImeAction.Done
                 )
             }
         }
 
+        LedPanel(accentColor = LedColors.NeonPurple) {
+            InputField(
+                label = "Módulos fantasma (opcional, bajo pantalla)",
+                value = ghostModulesInput,
+                onValueChange = { ghostModulesInput = LedCalculator.integerSanitized(it) },
+                modifier = Modifier.fillMaxWidth(),
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Number
+            )
+            Text(
+                text = "Espacio vacío de 1–3 gabinetes bajo la pantalla LED. Afecta bases, escaleras y cobertura de montaje.",
+                color = LedColors.TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+            )
+        }
+
         if (activeSpec != null && widthMeters != null && heightMeters != null) {
             val result = LedCalculator.calculate(
-                activeSpec, widthMeters, heightMeters, selectedUnit
+                activeSpec, widthMeters, heightMeters, selectedUnit, ghostModules = ghostModules
             )
             if (result != null) {
                 ResolutionResults(
@@ -235,8 +293,10 @@ fun ResolutionCalculatorScreen(
 
         Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.Center) {
             Button3D("🗑️ Limpiar", false) {
+                dismissKeyboard()
                 widthInput = ""
                 heightInput = ""
+                ghostModulesInput = ""
             }
             Spacer(Modifier.width(12.dp))
             Button3D("❌ Cerrar", false) { closeApp(platformContext) }
@@ -345,7 +405,19 @@ private fun ResolutionResults(
                 MaterialTheme.typography.headlineSmall
             )
             ResultLine("↔ Columnas: ${result.modulesAcross}", LedColors.Result.Total, MaterialTheme.typography.titleMedium)
-            ResultLine("↕ Filas: ${result.modulesHigh}", LedColors.Result.Total, MaterialTheme.typography.titleMedium)
+            ResultLine("↕ Filas LED: ${result.modulesHigh}", LedColors.Result.Total, MaterialTheme.typography.titleMedium)
+            if (result.ghostModules > 0) {
+                ResultLine(
+                    "Módulos fantasma (bajo pantalla): ${result.ghostModules}",
+                    LedColors.NeonPurple,
+                    MaterialTheme.typography.titleMedium
+                )
+                ResultLine(
+                    "Estructura montaje: ${result.modulesAcross} × ${result.structureModulesHigh} gabinetes",
+                    LedColors.BasesAccent,
+                    MaterialTheme.typography.bodyMedium
+                )
+            }
             ResultLine("📐 Cobertura: ${result.displayWidth} × ${result.displayHeight} ${result.displayUnitLabel}", LedColors.Result.Coverage)
             ResultLine("🕳️ Hueco de pantalla: ${result.holeWidthFormatted} × ${result.holeHeightFormatted} ft", LedColors.Result.Hole)
             ResultLine("con paneles", LedColors.Result.Hole, MaterialTheme.typography.bodyMedium)
@@ -370,7 +442,9 @@ private fun ResolutionResults(
                     BasesDistributionList(support = result.supportCalc)
                     BasesSketch(
                         modulesAcross = result.modulesAcross,
-                        modulesHigh = result.modulesHigh,
+                        modulesHigh = result.structureModulesHigh,
+                        ledModulesHigh = result.modulesHigh,
+                        ghostModules = result.ghostModules,
                         support = result.supportCalc
                     )
                 }
@@ -473,13 +547,29 @@ private fun UnitSelector(selectedUnit: MeasurementUnit, onSelect: (MeasurementUn
 }
 
 @Composable
-private fun InputField(label: String, value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun InputField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    imeAction: ImeAction = ImeAction.Done,
+    onImeNext: (() -> Unit)? = null,
+    keyboardType: KeyboardType = KeyboardType.Decimal
+) {
+    val dismissKeyboard = rememberKeyboardDismissHandler()
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(formatUiText(label), color = LedColors.TextSecondary) },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = keyboardType,
+            imeAction = imeAction
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = { dismissKeyboard() },
+            onNext = { onImeNext?.invoke() ?: dismissKeyboard() }
+        ),
         modifier = modifier,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = LedColors.Panel.copy(alpha = 0.9f),

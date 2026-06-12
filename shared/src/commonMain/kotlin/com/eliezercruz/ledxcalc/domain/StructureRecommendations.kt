@@ -23,7 +23,11 @@ object StructureRecommendations {
             summaryLines = BasesDistribution.baseLines(s),
             detailLines = buildList {
                 addAll(BasesDistribution.stairLines(s))
-                add("${result.modulesAcross} columnas × ${result.modulesHigh} filas de gabinetes")
+                add("${result.modulesAcross} columnas × ${result.modulesHigh} filas LED")
+                if (result.ghostModules > 0) {
+                    add("${result.ghostModules} módulo(s) fantasma bajo pantalla")
+                    add("Estructura total: ${result.modulesAcross} × ${result.structureModulesHigh} gabinetes")
+                }
             }
         )
     }
@@ -36,7 +40,11 @@ object StructureRecommendations {
             primaryValue = "${result.trussWidthFeet} × ${result.trussHeightFeet} ft",
             detailLines = listOf(
                 "Ancho truss = ancho pantalla + 2 ft (${formatDouble(result.screenWidthFeet, 1)} ft + margen)",
-                "Alto truss = alto pantalla + 1 ft (${formatDouble(result.screenHeightFeet, 1)} ft + margen)",
+                if (result.ghostModules > 0) {
+                    "Alto truss = alto estructura + 1 ft (${formatDouble(result.structureHeightMeters * 3.28084, 1)} ft incl. fantasma + margen)"
+                } else {
+                    "Alto truss = alto pantalla + 1 ft (${formatDouble(result.screenHeightFeet, 1)} ft + margen)"
+                },
                 "Pantalla colgada dentro del marco truss"
             )
         )

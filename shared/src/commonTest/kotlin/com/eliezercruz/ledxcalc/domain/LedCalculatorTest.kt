@@ -103,4 +103,26 @@ class LedCalculatorTest {
         assertEquals(1008, result.widthPixels)
         assertEquals(1344, result.heightPixels)
     }
+
+    @Test
+    fun ghostModulesAffectStructureNotLedCount() {
+        val spec = ModuleCatalog.findByModel(ModulePhysicalCategory.SIZE_500x500, "P3.91")!!
+        val withoutGhost = LedCalculator.calculate(spec, 5.0, 2.0, MeasurementUnit.METERS, ghostModules = 0)
+        val withGhost = LedCalculator.calculate(spec, 5.0, 2.0, MeasurementUnit.METERS, ghostModules = 1)
+        requireNotNull(withoutGhost)
+        requireNotNull(withGhost)
+
+        assertEquals(withoutGhost.modulesAcross, withGhost.modulesAcross)
+        assertEquals(withoutGhost.modulesHigh, withGhost.modulesHigh)
+        assertEquals(withoutGhost.totalModules, withGhost.totalModules)
+        assertEquals(1, withGhost.ghostModules)
+        assertEquals(withoutGhost.modulesHigh + 1, withGhost.structureModulesHigh)
+
+        assertEquals("16.40", withGhost.displayWidth)
+        assertEquals("8.20", withGhost.displayHeight)
+
+        assertTrue(withGhost.supportCalc.stair4 >= withoutGhost.supportCalc.stair4 ||
+            withGhost.supportCalc.stair3 > withoutGhost.supportCalc.stair3 ||
+            withGhost.supportCalc.stair2 > withoutGhost.supportCalc.stair2)
+    }
 }

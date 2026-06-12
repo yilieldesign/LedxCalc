@@ -114,7 +114,11 @@ internal object PdfSketchRenderer {
 
         val leftLines = buildList {
             add("Columnas:" to "${data.columns}")
-            add("Filas:" to "${data.rows}")
+            add("Filas LED:" to "${data.rows}")
+            if (data.ghostModules > 0) {
+                add("Módulos fantasma:" to "${data.ghostModules}")
+                add("Estructura montaje:" to "${data.columns} × ${data.structureModulesHigh} gab.")
+            }
             add("Total módulos:" to "${data.totalModules}")
             add("Resolución:" to "${data.widthPixels} × ${data.heightPixels} px")
             add("Cobertura:" to "${data.displayWidth} × ${data.displayHeight} ${data.unitLabel}")

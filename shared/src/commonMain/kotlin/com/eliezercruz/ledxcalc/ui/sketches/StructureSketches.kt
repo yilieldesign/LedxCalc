@@ -194,7 +194,9 @@ fun BasesSketch(
     modulesAcross: Int,
     modulesHigh: Int,
     support: SupportCalculation,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    ledModulesHigh: Int = modulesHigh,
+    ghostModules: Int = 0
 ) {
     val stairBlocks = BasesLayout.compute(modulesAcross, modulesHigh, support)?.stairBlocks?.size ?: 1
     Canvas(
@@ -203,7 +205,13 @@ fun BasesSketch(
             .height(basesSketchHeight(modulesHigh, stairBlocks))
             .background(BasesSketchColors.canvasBg)
     ) {
-        drawBasesSketchContent(modulesAcross, modulesHigh, support)
+        drawBasesSketchContent(
+            modulesAcross = modulesAcross,
+            structureModulesHigh = modulesHigh,
+            ledModulesHigh = ledModulesHigh,
+            ghostModules = ghostModules,
+            support = support
+        )
     }
 }
 

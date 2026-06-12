@@ -95,6 +95,10 @@ enum class ViewTab {
 data class LedCalculationResult(
     val modulesAcross: Int,
     val modulesHigh: Int,
+    /** Filas totales para bases/escaleras (LED + fantasma). */
+    val structureModulesHigh: Int,
+    /** Módulos vacíos bajo la pantalla LED (solo estructura). */
+    val ghostModules: Int,
     val totalModules: Int,
     val widthPixels: Int,
     val heightPixels: Int,
@@ -123,7 +127,9 @@ data class LedCalculationResult(
     val trussWidthFeet: Int,
     val trussHeightFeet: Int,
     val screenWidthFeet: Double,
-    val screenHeightFeet: Double
+    val screenHeightFeet: Double,
+    /** Altura física total de montaje incluyendo módulos fantasma. */
+    val structureHeightMeters: Double
 )
 
 data class PdfExportData(
@@ -151,5 +157,7 @@ data class PdfExportData(
     val screenWidthFeet: Double,
     val screenHeightFeet: Double,
     val holeWidthFormatted: String,
-    val holeHeightFormatted: String
+    val holeHeightFormatted: String,
+    val ghostModules: Int = 0,
+    val structureModulesHigh: Int = rows
 )

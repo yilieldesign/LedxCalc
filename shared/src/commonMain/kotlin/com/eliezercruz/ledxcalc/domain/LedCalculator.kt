@@ -83,22 +83,30 @@ object LedCalculator {
         }
     }
 
+    fun integerSanitized(input: String): String = input.filter { it.isDigit() }
+
     fun calculate(
         moduleSpec: ModuleSpec,
         widthMeters: Double?,
         heightMeters: Double?,
         inputUnit: MeasurementUnit,
-        environment: CabinetEnvironment = CabinetEnvironment.INDOOR
+        environment: CabinetEnvironment = CabinetEnvironment.INDOOR,
+        ghostModules: Int = 0
     ): LedCalculationResult? {
         val modulesAcross = widthMeters?.let { ceil(it / moduleSpec.widthMeters).toInt() } ?: return null
         val modulesHigh = heightMeters?.let { ceil(it / moduleSpec.heightMeters).toInt() } ?: return null
         if (modulesAcross <= 0 || modulesHigh <= 0) return null
+
+        val ghost = ghostModules.coerceAtLeast(0)
+        val structureModulesHigh = modulesHigh + ghost
 
         val totalModules = modulesAcross * modulesHigh
         val widthPixels = moduleSpec.widthPx * modulesAcross
         val heightPixels = moduleSpec.heightPx * modulesHigh
         val coveredWidthMeters = modulesAcross * moduleSpec.widthMeters
         val coveredHeightMeters = modulesHigh * moduleSpec.heightMeters
+        val structureHeightMeters = structureModulesHigh * moduleSpec.heightMeters
+        val coverageHeightMeters = if (ghost > 0) structureHeightMeters else coveredHeightMeters
         val groupSizeForSpec = moduleSpec.modulesPerSignalLine
         val maxColumnsPerLine = (groupSizeForSpec / modulesHigh).coerceAtLeast(1)
         val signalLinesNeeded = ceil(modulesAcross.toFloat() / maxColumnsPerLine).toInt()
@@ -120,27 +128,30 @@ object LedCalculator {
         val (displayWidth, displayHeight, displayUnitLabel) = if (inputUnit == MeasurementUnit.METERS) {
             Triple(
                 formatFeet(coveredWidthMeters * 3.28084),
-                formatFeet(coveredHeightMeters * 3.28084),
+                formatFeet(coverageHeightMeters * 3.28084),
                 "ft"
             )
         } else {
             Triple(
                 formatMeters(coveredWidthMeters),
-                formatMeters(coveredHeightMeters),
+                formatMeters(coverageHeightMeters),
                 "m"
             )
         }
 
         val screenWidthFeet = coveredWidthMeters * 3.28084
         val screenHeightFeet = coveredHeightMeters * 3.28084
+        val structureHeightFeet = structureHeightMeters * 3.28084
         val holeWidthFeet = calculateHoleFeet(screenWidthFeet)
         val holeHeightFeet = calculateHoleFeet(screenHeightFeet)
 
-        val supportCalc = calculateSupportStructures(modulesAcross, modulesHigh)
+        val supportCalc = calculateSupportStructures(modulesAcross, structureModulesHigh)
 
         return LedCalculationResult(
             modulesAcross = modulesAcross,
             modulesHigh = modulesHigh,
+            structureModulesHigh = structureModulesHigh,
+            ghostModules = ghost,
             totalModules = totalModules,
             widthPixels = widthPixels,
             heightPixels = heightPixels,
@@ -167,9 +178,10 @@ object LedCalculator {
             holeHeightFormatted = formatHoleFeet(holeHeightFeet),
             supportCalc = supportCalc,
             trussWidthFeet = ceil(screenWidthFeet).toInt() + 2,
-            trussHeightFeet = ceil(screenHeightFeet).toInt() + 1,
+            trussHeightFeet = ceil(structureHeightFeet).toInt() + 1,
             screenWidthFeet = screenWidthFeet,
-            screenHeightFeet = screenHeightFeet
+            screenHeightFeet = screenHeightFeet,
+            structureHeightMeters = structureHeightMeters
         )
     }
 
@@ -231,7 +243,9 @@ object LedCalculator {
             screenWidthFeet = result.screenWidthFeet,
             screenHeightFeet = result.screenHeightFeet,
             holeWidthFormatted = result.holeWidthFormatted,
-            holeHeightFormatted = result.holeHeightFormatted
+            holeHeightFormatted = result.holeHeightFormatted,
+            ghostModules = result.ghostModules,
+            structureModulesHigh = result.structureModulesHigh
         )
     }
 }

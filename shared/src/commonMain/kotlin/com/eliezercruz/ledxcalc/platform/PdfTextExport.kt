@@ -18,7 +18,11 @@ fun buildPdfTextSummary(data: PdfExportData): String = buildString {
     appendLine()
     appendLine("── ESPECIFICACIONES TÉCNICAS ──")
     appendLine("Módulo: ${data.moduleSpec.title}")
-    appendLine("Columnas: ${data.columns}  |  Filas: ${data.rows}  |  Total: ${data.totalModules}")
+    appendLine("Columnas: ${data.columns}  |  Filas LED: ${data.rows}  |  Total: ${data.totalModules}")
+    if (data.ghostModules > 0) {
+        appendLine("Módulos fantasma (bajo pantalla): ${data.ghostModules}")
+        appendLine("Estructura montaje: ${data.columns} × ${data.structureModulesHigh} gabinetes")
+    }
     appendLine("Resolución: ${data.widthPixels} × ${data.heightPixels} px")
     appendLine("Cobertura: ${data.displayWidth} × ${data.displayHeight} ${data.unitLabel}")
     appendLine("Líneas de señal: ${data.signalLines} (máx ${data.groupSize}/línea)")

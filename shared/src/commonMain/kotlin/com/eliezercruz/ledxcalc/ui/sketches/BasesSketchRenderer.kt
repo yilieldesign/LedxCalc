@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -208,10 +209,12 @@ private fun DrawScope.drawVerticalLadder(
 
 internal fun DrawScope.drawBasesSketchContent(
     modulesAcross: Int,
-    modulesHigh: Int,
+    structureModulesHigh: Int,
+    ledModulesHigh: Int,
+    ghostModules: Int,
     support: SupportCalculation
 ) {
-    val layout = BasesLayout.compute(modulesAcross, modulesHigh, support) ?: return
+    val layout = BasesLayout.compute(modulesAcross, structureModulesHigh, support) ?: return
 
     val pad = 12.dp.toPx()
     val titleH = 18.dp.toPx()
@@ -219,7 +222,6 @@ internal fun DrawScope.drawBasesSketchContent(
     val baseLabelH = 28.dp.toPx()
     val gridTop = pad + titleH + 6.dp.toPx()
 
-    // Fondo plano sin rayas
     drawRect(BasesSketchColors.canvasBg, Offset(0f, 0f), Size(size.width, size.height))
 
     val usableW = size.width - pad * 2
@@ -232,8 +234,9 @@ internal fun DrawScope.drawBasesSketchContent(
 
     val fixedBelow = baseDepthY + baseLabelH + pad + 6.dp.toPx()
     val availableGridH = (size.height - gridTop - fixedBelow).coerceAtLeast(56.dp.toPx())
-    val cellH = availableGridH / modulesHigh.coerceAtLeast(1)
-    val gridH = cellH * modulesHigh
+    val cellH = availableGridH / structureModulesHigh.coerceAtLeast(1)
+    val gridH = cellH * structureModulesHigh
+    val ledGridH = cellH * ledModulesHigh.coerceAtLeast(1)
     val gridLeft = pad
     val gridRight = gridLeft + modulesAcross * cellW
     val screenBottom = gridTop + gridH
@@ -252,8 +255,8 @@ internal fun DrawScope.drawBasesSketchContent(
         withShadow = false
     )
 
-    // 1. Contorno de pantalla (atrás, sin relleno)
-    drawScreenOutline(gridLeft, gridTop, modulesAcross * cellW, gridH, cellW, cellH, modulesAcross, modulesHigh)
+    // 1. Contorno pantalla LED (filas superiores)
+    drawScreenOutline(gridLeft, gridTop, modulesAcross * cellW, ledGridH, cellW, cellH, modulesAcross, ledModulesHigh)
     drawCanvasText(
         text = "Pantalla LED",
         x = gridLeft + modulesAcross * cellW / 2f,
@@ -265,7 +268,49 @@ internal fun DrawScope.drawBasesSketchContent(
         withShadow = false
     )
 
-    // 2. Escaleras sobre el contorno (escalera de 4 abajo)
+    // 2. Zona fantasma bajo la pantalla (espacio vacío de gabinete)
+    if (ghostModules > 0) {
+        val ghostTop = gridTop + ledGridH
+        val ghostH = cellH * ghostModules
+        drawRect(
+            Color(0xFFECEFF1).copy(alpha = 0.55f),
+            Offset(gridLeft, ghostTop),
+            Size(modulesAcross * cellW, ghostH)
+        )
+        for (c in 1 until modulesAcross) {
+            val x = gridLeft + c * cellW
+            drawLine(
+                BasesSketchColors.unitDivider.copy(alpha = 0.5f),
+                Offset(x, ghostTop),
+                Offset(x, ghostTop + ghostH),
+                strokeWidth = 0.8.dp.toPx()
+            )
+        }
+        for (r in 1 until ghostModules) {
+            val y = ghostTop + r * cellH
+            drawLine(
+                BasesSketchColors.unitDivider.copy(alpha = 0.5f),
+                Offset(gridLeft, y),
+                Offset(gridRight, y),
+                strokeWidth = 0.8.dp.toPx()
+            )
+        }
+        drawRect(
+            BasesSketchColors.screenOutline.copy(alpha = 0.7f),
+            Offset(gridLeft, ghostTop),
+            Size(modulesAcross * cellW, ghostH),
+            style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f)))
+        )
+        val ghostLabel = if (ghostModules == 1) "Módulo fantasma" else "Módulos fantasma ($ghostModules)"
+        drawSketchLabel(
+            text = ghostLabel,
+            x = gridLeft + modulesAcross * cellW / 2f,
+            y = ghostTop + ghostH / 2f,
+            textSizePx = min(cellW * 0.34f, 11.dp.toPx()).coerceAtLeast(9.dp.toPx())
+        )
+    }
+
+    // 3. Escaleras (altura total estructura)
     layout.stairColumns.forEach { col ->
         val anchorX = gridLeft + col * cellW + depth.dx * 0.5f
         var blockBottom = baseBackY
@@ -291,7 +336,7 @@ internal fun DrawScope.drawBasesSketchContent(
         }
     }
 
-    // 3. Bases negras (delante)
+    // 4. Bases negras (delante)
     layout.baseUnits.forEach { unit ->
         val x0 = gridLeft + unit.startCol * cellW
         val x1 = gridLeft + (unit.startCol + unit.span) * cellW
