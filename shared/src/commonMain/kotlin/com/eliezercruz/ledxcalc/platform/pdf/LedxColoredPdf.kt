@@ -247,8 +247,9 @@ object LedxColoredPdf {
         objects += "2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n"
         objects += "3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_W.toInt()} ${PAGE_H.toInt()}] " +
             "/Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>endobj\n"
-        val streamBytes = contentStream.encodeToByteArray()
-        objects += "4 0 obj<< /Length ${streamBytes.size} >>stream\n$contentStream\nendstream\nendobj\n"
+        // PDF offsets must match byte length; use Latin-1 (1 char = 1 byte), never UTF-8.
+        val streamLen = contentStream.length
+        objects += "4 0 obj<< /Length $streamLen >>stream\n$contentStream\nendstream\nendobj\n"
         objects += "5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>endobj\n"
         objects += "6 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>endobj\n"
 
@@ -269,8 +270,18 @@ object LedxColoredPdf {
         }
         builder.append("trailer<< /Size ${objects.size + 1} /Root 1 0 R >>\n")
         builder.append("startxref\n$xrefPos\n%%EOF\n")
-        return builder.toString().encodeToByteArray()
+        return builder.toString().toLatin1Bytes()
     }
+}
+
+/** One Kotlin Char → one PDF byte (WinAnsi / binary marker safe). */
+private fun String.toLatin1Bytes(): ByteArray {
+    val out = ByteArray(length)
+    for (i in indices) {
+        val code = this[i].code
+        out[i] = (if (code <= 0xFF) code else '?'.code).toByte()
+    }
+    return out
 }
 
 private data class PdfRgb(val r: Float, val g: Float, val b: Float, val alpha: Float = 1f) {
