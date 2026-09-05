@@ -89,7 +89,7 @@ jobs:
             exit 1
           fi
           cp -r .vercel dist/.vercel
-          # Evita que un build viejo de Vercel Git pise el artifact
           cd dist
-          npx vercel deploy . --prod --yes --force --token "$VERCEL_TOKEN"
+          # Sube el artifact precompilado (no rebuild en Vercel).
+          npx vercel deploy . --prod --yes --token "$VERCEL_TOKEN"
           echo "Deploy Vercel OK"
