@@ -19,6 +19,9 @@ import kotlin.math.sin
 internal object PdfSketchRenderer {
     private const val PAGE_HEIGHT = 792f
     private const val CREDIT_RESERVE = 28f
+    /** Espacio reservado abajo para specs (más alto = boceto más chico). */
+    private const val SPECS_RESERVE = 310f
+    private const val GRID_HEIGHT_SCALE = 0.72f
 
     private val specWhite = Color.White
     private val specLabelBlue = Color(0xFF00E5FF)
@@ -58,23 +61,24 @@ internal object PdfSketchRenderer {
         }
         canvas.drawText(sizeLine, pageWidth / 2f, 58f, paint)
 
-        var specsStartY = pageH - 220f
+        var specsStartY = pageH - CREDIT_RESERVE - SPECS_RESERVE
         if (data.columns > 0 && data.rows > 0) {
-            val gridTop = 72f
-            val maxSpecsBottom = pageH - CREDIT_RESERVE - 210f
-            val margin = 30f
+            val regionTop = 72f
+            val regionBottom = pageH - CREDIT_RESERVE - SPECS_RESERVE - 18f
+            val margin = 36f
             val maxGridW = pageWidth - margin * 2
-            val maxGridH = maxSpecsBottom - gridTop - 20f
+            val maxGridH = (regionBottom - regionTop) * GRID_HEIGHT_SCALE
             val cellSize = min(maxGridW / data.columns, maxGridH / data.rows)
             val gridH = cellSize * data.rows
             val gridW = cellSize * data.columns
             val gridLeft = (pageWidth - gridW) / 2f
+            val gridTop = regionTop + (regionBottom - regionTop - gridH) / 2f
 
             drawModuleGridStyled(
                 canvas, data, paint, gridLeft, gridTop, cellSize, cellSize,
                 drawBorder = true, showOrderBadges = true, showLineLabels = true, showArrows = true
             )
-            specsStartY = gridTop + gridH + 22f
+            specsStartY = regionBottom + 10f
         }
 
         drawSpecsFooter(canvas, data, paint, pageWidth, specsStartY)
@@ -96,15 +100,15 @@ internal object PdfSketchRenderer {
         pageWidth: Int,
         startY: Float
     ) {
-        val colGap = 24f
-        val colW = (pageWidth - 56f - colGap) / 2f
-        val leftX = 28f
+        val colGap = 20f
+        val colW = (pageWidth - 48f - colGap) / 2f
+        val leftX = 24f
         val rightX = leftX + colW + colGap
-        val lineH = 19f
-        val valueXLeft = leftX + 132f
-        val valueXRight = rightX + 132f
-        val bodySize = 13f
-        val headerSize = 14f
+        val lineH = 21f
+        val valueXLeft = leftX + 148f
+        val valueXRight = rightX + 148f
+        val bodySize = 14.5f
+        val headerSize = 16f
 
         paint.textAlign = Paint.Align.LEFT
         applyPlainText(paint, bodyTypeface, headerSize, specLabelBlue)

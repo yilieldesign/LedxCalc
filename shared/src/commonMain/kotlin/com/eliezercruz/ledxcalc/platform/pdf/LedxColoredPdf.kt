@@ -21,6 +21,10 @@ object LedxColoredPdf {
     private const val PAGE_W = 612f
     private const val PAGE_H = 792f
     private const val CREDIT_RESERVE = 28f
+    /** Espacio reservado abajo para specs (más alto = boceto más chico). */
+    private const val SPECS_RESERVE = 310f
+    /** Tope adicional del boceto para dejar aire a la tipografía. */
+    private const val GRID_HEIGHT_SCALE = 0.72f
 
     private val groupColors = listOf(
         PdfRgb(0f, 0.4f, 1f),
@@ -45,21 +49,24 @@ object LedxColoredPdf {
         }
         content.appendTextCentered(PAGE_W / 2f, PAGE_H - 58f, 12f, PdfRgb.WHITE, sizeLine)
 
-        var specsStartY = 220f
+        var specsStartY = CREDIT_RESERVE + SPECS_RESERVE
         if (data.columns > 0 && data.rows > 0) {
             val gridTopFromBottom = PAGE_H - 72f
-            val maxSpecsBottom = CREDIT_RESERVE + 210f
-            val margin = 30f
+            val maxSpecsBottom = CREDIT_RESERVE + SPECS_RESERVE
+            val margin = 36f
             val maxGridW = PAGE_W - margin * 2
-            val maxGridH = gridTopFromBottom - maxSpecsBottom - 20f
+            val maxGridH = (gridTopFromBottom - maxSpecsBottom - 18f) * GRID_HEIGHT_SCALE
             val cellSize = min(maxGridW / data.columns, maxGridH / data.rows)
             val gridH = cellSize * data.rows
             val gridW = cellSize * data.columns
             val gridLeft = (PAGE_W - gridW) / 2f
-            val gridBottom = gridTopFromBottom - gridH
+            // Centrar el boceto en la franja superior disponible
+            val availableTop = gridTopFromBottom
+            val availableBottom = maxSpecsBottom + 18f
+            val gridBottom = availableBottom + (availableTop - availableBottom - gridH) / 2f
 
             drawModuleGrid(content, data, gridLeft, gridBottom, cellSize, cellSize)
-            specsStartY = gridBottom - 22f
+            specsStartY = availableBottom - 8f
         }
 
         drawSpecsFooter(content, data, specsStartY)
@@ -174,16 +181,18 @@ object LedxColoredPdf {
 
     private fun drawSpecsFooter(content: StringBuilder, data: PdfExportData, startYFromBottom: Float) {
         // startYFromBottom is PDF Y of the header baseline area (approx top of specs block)
-        val colGap = 24f
-        val leftX = 28f
-        val rightX = leftX + (PAGE_W - 56f - colGap) / 2f + colGap
-        val valueXLeft = leftX + 132f
-        val valueXRight = rightX + 132f
-        val lineH = 16f
+        val colGap = 20f
+        val leftX = 24f
+        val rightX = leftX + (PAGE_W - 48f - colGap) / 2f + colGap
+        val valueXLeft = leftX + 148f
+        val valueXRight = rightX + 148f
+        val lineH = 19f
+        val bodySize = 12.5f
+        val headerSize = 14.5f
         val headerY = startYFromBottom
 
-        content.appendText(leftX, headerY, 12f, PdfRgb.CYAN, "ESPECIFICACIONES TÉCNICAS", bold = true)
-        content.appendText(rightX, headerY, 12f, PdfRgb.GREEN, "ESTRUCTURA", bold = true)
+        content.appendText(leftX, headerY, headerSize, PdfRgb.CYAN, "ESPECIFICACIONES TÉCNICAS", bold = true)
+        content.appendText(rightX, headerY, headerSize, PdfRgb.GREEN, "ESTRUCTURA", bold = true)
 
         val leftLines = buildList {
             add("Columnas:" to "${data.columns}")
@@ -227,16 +236,16 @@ object LedxColoredPdf {
             }
         }
 
-        var yLeft = headerY - 18f
+        var yLeft = headerY - 22f
         leftLines.forEach { (label, value) ->
-            content.appendText(leftX, yLeft, 10f, PdfRgb.CYAN, label)
-            content.appendText(valueXLeft, yLeft, 10f, PdfRgb.WHITE, value)
+            content.appendText(leftX, yLeft, bodySize, PdfRgb.CYAN, label)
+            content.appendText(valueXLeft, yLeft, bodySize, PdfRgb.WHITE, value)
             yLeft -= lineH
         }
-        var yRight = headerY - 18f
+        var yRight = headerY - 22f
         rightLines.forEach { (label, value) ->
-            content.appendText(rightX, yRight, 10f, PdfRgb.GREEN, label)
-            content.appendText(valueXRight, yRight, 10f, PdfRgb.WHITE, value)
+            content.appendText(rightX, yRight, bodySize, PdfRgb.GREEN, label)
+            content.appendText(valueXRight, yRight, bodySize, PdfRgb.WHITE, value)
             yRight -= lineH
         }
     }
