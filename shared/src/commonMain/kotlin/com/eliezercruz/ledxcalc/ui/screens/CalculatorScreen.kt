@@ -17,11 +17,15 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -84,6 +88,7 @@ import com.eliezercruz.ledxcalc.resources.logo_g
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.Image
 import com.eliezercruz.ledxcalc.util.currentTimeMillis
+import com.eliezercruz.ledxcalc.util.formatDouble
 import kotlin.random.Random
 
 @Composable
@@ -95,6 +100,7 @@ fun ResolutionCalculatorScreen(
     var widthInput by rememberSaveable { mutableStateOf("") }
     var heightInput by rememberSaveable { mutableStateOf("") }
     var ghostModulesInput by rememberSaveable { mutableStateOf("") }
+    var modulesOnSide by rememberSaveable { mutableStateOf(false) }
     var selectedUnitKey by rememberSaveable { mutableStateOf(MeasurementUnit.METERS.name) }
     var selectedCategoryKey by rememberSaveable { mutableStateOf(ModulePhysicalCategory.SIZE_500x500.name) }
     var selectedModuleId by rememberSaveable { mutableStateOf(ModuleCatalog.defaultModuleId(ModulePhysicalCategory.SIZE_500x500)) }
@@ -119,7 +125,8 @@ fun ResolutionCalculatorScreen(
     val ghostModules = ghostModulesInput.toIntOrNull()?.coerceAtLeast(0) ?: 0
     val catalogModule = ModuleCatalog.findById(selectedModuleId)
         ?: ModuleCatalog.forCategory(selectedCategory).firstOrNull()
-    val activeSpec = if (useCustomModule) customSpec else catalogModule
+    val baseSpec = if (useCustomModule) customSpec else catalogModule
+    val activeSpec = baseSpec?.withModulesOnSide(modulesOnSide)
     val dismissKeyboard = rememberKeyboardDismissHandler()
     val scrollState = rememberScrollState()
     val heightFocusRequester = remember { FocusRequester() }
@@ -162,6 +169,7 @@ fun ResolutionCalculatorScreen(
             ModuleDropdownSelector(
                 selectedCategory = selectedCategory,
                 selectedModule = catalogModule,
+                modulesOnSide = modulesOnSide,
                 onCategorySelected = { category ->
                     dismissKeyboard()
                     selectedCategoryKey = category.name
@@ -206,6 +214,15 @@ fun ResolutionCalculatorScreen(
                 Button3D("📋 Historial", false) { showHistory = true }
             }
         }
+
+        ModulesOnSideToggle(
+            checked = modulesOnSide,
+            onCheckedChange = {
+                dismissKeyboard()
+                modulesOnSide = it
+            },
+            previewSpec = baseSpec?.withModulesOnSide(true)
+        )
 
         UnitSelector(selectedUnit) {
             dismissKeyboard()
@@ -308,6 +325,7 @@ fun ResolutionCalculatorScreen(
                 widthInput = ""
                 heightInput = ""
                 ghostModulesInput = ""
+                modulesOnSide = false
             }
             Spacer(Modifier.width(12.dp))
             Button3D("❌ Cerrar", false) { closeApp(platformContext) }
@@ -433,6 +451,23 @@ private fun ResolutionResults(
             ResultLine("🕳️ Hueco de pantalla: ${result.holeWidthFormatted} × ${result.holeHeightFormatted} ft", LedColors.Result.Hole)
             ResultLine("con paneles", LedColors.Result.Hole, MaterialTheme.typography.bodyMedium)
             ResultLine("🌐 Líneas de señal: ${result.signalLinesNeeded} (cada ${result.groupSizeForSpec} módulos)", LedColors.Result.Signal)
+            ResultLine(
+                "⚡ Por gabinete: ${formatDouble(result.wattsPerModule, 0)} W prom / ${formatDouble(result.wattsPerModuleMax, 0)} W máx · " +
+                    "${formatDouble(result.wattsPerModuleMax / 110.0, 2)} A máx @110V / " +
+                    "${formatDouble(result.wattsPerModuleMax / 220.0, 2)} A máx @220V",
+                LedColors.NeonTeal,
+                MaterialTheme.typography.bodyMedium
+            )
+            ResultLine(
+                "110 V gabinete: ${formatDouble(result.wattsPerModule / 110.0, 2)} A prom / ${formatDouble(result.wattsPerModuleMax / 110.0, 2)} A máx",
+                LedColors.NeonCyan,
+                MaterialTheme.typography.bodySmall
+            )
+            ResultLine(
+                "220 V gabinete: ${formatDouble(result.wattsPerModule / 220.0, 2)} A prom / ${formatDouble(result.wattsPerModuleMax / 220.0, 2)} A máx",
+                LedColors.NeonCyan,
+                MaterialTheme.typography.bodySmall
+            )
 
             SketchSection("🖥️ Boceto de pantalla") {
                 ModuleSketch(
@@ -546,6 +581,59 @@ private fun ResultLine(text: String, color: Color = LedColors.Result.Default, st
 }
 
 @Composable
+private fun ModulesOnSideToggle(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    previewSpec: ModuleSpec?,
+    modifier: Modifier = Modifier
+) {
+    LedPanel(modifier = modifier, accentColor = LedColors.NeonOrange) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .toggleable(
+                    value = checked,
+                    role = Role.Checkbox,
+                    onValueChange = onCheckedChange
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = null,
+                colors = CheckboxDefaults.colors(
+                    checkedColor = LedColors.NeonOrange,
+                    uncheckedColor = LedColors.TextSecondary,
+                    checkmarkColor = LedColors.Black
+                )
+            )
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "Módulos acostados (rotar 90° a la izquierda)",
+                    color = LedColors.NeonOrange,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Intercambia ancho ↔ alto del gabinete y de los píxeles (ej. 500×1000 / 192×384 → 1000×500 / 384×192).",
+                    color = LedColors.TextSecondary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                if (checked && previewSpec != null) {
+                    Text(
+                        text = "Activo: ${previewSpec.physicalLabel} · ${previewSpec.widthPx}×${previewSpec.heightPx} px",
+                        color = LedColors.NeonGold,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun UnitSelector(selectedUnit: MeasurementUnit, onSelect: (MeasurementUnit) -> Unit) {
     LedPanel(accentColor = LedColors.NeonGreen) {
         Row(
@@ -615,19 +703,28 @@ private fun CreateModuleDialog(onDismiss: () -> Unit, onConfirm: (ModuleSpec) ->
                 InputField("Alto (px)", hPx, { hPx = it.filter { c -> c.isDigit() } })
                 InputField("Ancho (m)", wM, { wM = LedCalculator.decimalSanitized(it) })
                 InputField("Alto (m)", hM, { hM = LedCalculator.decimalSanitized(it) })
-                InputField("Módulos/línea señal", modulesPerLine, { modulesPerLine = it.filter { c -> c.isDigit() } })
+                InputField(
+                    "Módulos/línea señal (opcional; si vacío: 655360 ÷ px)",
+                    modulesPerLine,
+                    { modulesPerLine = it.filter { c -> c.isDigit() } }
+                )
                 InputField("Watts por módulo", watts, { watts = LedCalculator.decimalSanitized(it) })
             }
         },
         confirmButton = {
             TextButton(onClick = {
+                val widthPx = wPx.toIntOrNull() ?: return@TextButton
+                val heightPx = hPx.toIntOrNull() ?: return@TextButton
+                val totalPx = widthPx * heightPx
+                val autoPerLine = ModuleCatalog.modulesPerSignalLine(totalPx)
                 val spec = ModuleSpec(
                     title = "Módulo ${wPx}x${hPx} px (${wM}×${hM} m)",
-                    widthPx = wPx.toIntOrNull() ?: return@TextButton,
-                    heightPx = hPx.toIntOrNull() ?: return@TextButton,
+                    widthPx = widthPx,
+                    heightPx = heightPx,
                     widthMeters = wM.toDoubleOrNull() ?: return@TextButton,
                     heightMeters = hM.toDoubleOrNull() ?: return@TextButton,
-                    modulesPerSignalLine = modulesPerLine.toIntOrNull() ?: 36,
+                    totalPixels = totalPx,
+                    modulesPerSignalLine = modulesPerLine.toIntOrNull() ?: autoPerLine,
                     wattsPerModule = watts.toDoubleOrNull() ?: 0.0,
                     isCustom = true
                 )

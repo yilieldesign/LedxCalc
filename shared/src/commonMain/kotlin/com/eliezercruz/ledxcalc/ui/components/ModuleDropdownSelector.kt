@@ -19,12 +19,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.eliezercruz.ledxcalc.domain.CabinetEnvironment
+import com.eliezercruz.ledxcalc.domain.ElectricalCatalog
+import com.eliezercruz.ledxcalc.domain.ElectricalSpec
 import com.eliezercruz.ledxcalc.domain.ModuleCatalog
 import com.eliezercruz.ledxcalc.domain.ModulePhysicalCategory
 import com.eliezercruz.ledxcalc.domain.ModuleSpec
 import com.eliezercruz.ledxcalc.ui.theme.LedColors
+import com.eliezercruz.ledxcalc.util.formatDouble
+import kotlin.math.roundToInt
 
 @Composable
 fun ModuleDropdownSelector(
@@ -32,11 +37,14 @@ fun ModuleDropdownSelector(
     selectedModule: ModuleSpec?,
     onCategorySelected: (ModulePhysicalCategory) -> Unit,
     onModuleSelected: (ModuleSpec) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    environment: CabinetEnvironment = CabinetEnvironment.INDOOR,
+    modulesOnSide: Boolean = false
 ) {
     val categoryModules = remember(selectedCategory) { ModuleCatalog.forCategory(selectedCategory) }
     var categoryExpanded by remember { mutableStateOf(false) }
     var moduleExpanded by remember { mutableStateOf(false) }
+    val displayModule = selectedModule?.withModulesOnSide(modulesOnSide)
 
     LedPanel(modifier = modifier, accentColor = LedColors.NeonCyan) {
         Text(
@@ -66,12 +74,17 @@ fun ModuleDropdownSelector(
 
         DropdownField(
             label = "Resolución del módulo (px)",
-            value = selectedModule?.dropdownLabel ?: "Selecciona resolución",
+            value = when {
+                displayModule == null -> "Selecciona resolución"
+                modulesOnSide -> "${displayModule.dropdownLabel} · acostado"
+                else -> displayModule.dropdownLabel
+            },
             expanded = moduleExpanded,
             onExpand = { moduleExpanded = true },
             onDismiss = { moduleExpanded = false }
         ) {
             categoryModules.forEach { module ->
+                val electrical = ElectricalCatalog.forModule(module, environment)
                 DropdownMenuItem(
                     text = {
                         Column {
@@ -79,7 +92,8 @@ fun ModuleDropdownSelector(
                             Text(
                                 text = buildString {
                                     append("Pitch ${module.pitch} · ${module.physicalLabel}")
-                                    append(" · ${module.wattsPerModule.toInt()}–${module.wattsPerModuleMax.toInt()} W")
+                                    append(" · ${electrical.wattsPromedio.roundToInt()}–${electrical.wattsMax.roundToInt()} W")
+                                    append(" · ${formatDouble(electrical.amps110vMax, 1)} A máx @110V")
                                     append(" · ${module.modulesPerSignalLine} mód/línea")
                                 },
                                 style = MaterialTheme.typography.bodySmall,
@@ -95,13 +109,72 @@ fun ModuleDropdownSelector(
             }
         }
 
-        selectedModule?.let { module ->
+        displayModule?.let { module ->
+            val electrical = remember(module.id, module.widthPx, module.heightPx, environment) {
+                ElectricalCatalog.forModule(module, environment)
+            }
             Text(
                 text = "Cálculo: ${module.widthPx} px × cant. horizontal  |  ${module.heightPx} px × cant. vertical",
                 style = MaterialTheme.typography.bodySmall,
                 color = LedColors.NeonGold
             )
+            if (modulesOnSide) {
+                Text(
+                    text = "Orientación: acostado · ${module.physicalLabel}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LedColors.NeonOrange
+                )
+            }
+            ModuleElectricalSummary(
+                module = module,
+                electrical = electrical,
+                environment = environment
+            )
         }
+    }
+}
+
+@Composable
+fun ModuleElectricalSummary(
+    module: ModuleSpec,
+    electrical: ElectricalSpec,
+    environment: CabinetEnvironment,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp)
+            .background(LedColors.Black.copy(alpha = 0.35f), MaterialTheme.shapes.small)
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        Text(
+            text = "Por gabinete (${environment.label})",
+            color = LedColors.NeonTeal,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "${formatDouble(electrical.wattsPromedio, 0)} W prom / ${formatDouble(electrical.wattsMax, 0)} W máx",
+            color = LedColors.TextPrimary,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "110 V: ${formatDouble(electrical.amps110vPromedio, 2)} A prom / ${formatDouble(electrical.amps110vMax, 2)} A máx",
+            color = LedColors.NeonCyan,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "220 V: ${formatDouble(electrical.amps220vPromedio, 2)} A prom / ${formatDouble(electrical.amps220vMax, 2)} A máx",
+            color = LedColors.NeonCyan,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "Señal: ${module.modulesPerSignalLine} gabinetes/línea (655360 ÷ ${module.totalPixels} px)",
+            color = LedColors.TextSecondary,
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }
 

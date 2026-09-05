@@ -103,7 +103,8 @@ object ElectricalCatalog {
 
     fun baseForCabinet(widthMm: Int, heightMm: Double, environment: CabinetEnvironment): ElectricalSpec {
         val is500x500 = widthMm == 500 && heightMm == 500.0
-        val is500x1000 = widthMm == 500 && heightMm == 1000.0
+        val is500x1000 =
+            (widthMm == 500 && heightMm == 1000.0) || (widthMm == 1000 && heightMm == 500.0)
 
         if (is500x500) {
             return if (environment == CabinetEnvironment.OUTDOOR) outdoor500x500 else indoor500x500
@@ -124,11 +125,12 @@ object ElectricalCatalog {
 
     fun referencePitch(widthMm: Int, heightMm: Double): Double = when {
         widthMm == 500 && heightMm == 500.0 -> 3.91
-        widthMm == 500 && heightMm == 1000.0 -> 3.91
+        (widthMm == 500 && heightMm == 1000.0) || (widthMm == 1000 && heightMm == 500.0) -> 3.91
         widthMm == 1000 && heightMm == 1000.0 -> 3.91
         widthMm == 960 && heightMm == 960.0 -> 4.0
         widthMm == 640 && heightMm == 640.0 -> 2.0
-        widthMm == 600 && heightMm == 337.5 -> 1.56
+        (widthMm == 600 && heightMm == 337.5) || (widthMm == 337 && heightMm == 600.0) ||
+            (widthMm == 338 && heightMm == 600.0) -> 1.56
         else -> 3.91
     }
 
@@ -183,7 +185,7 @@ object ElectricalCatalog {
 
     fun supportsEnvironmentToggle(widthMm: Int, heightMm: Double): Boolean =
         (widthMm == 500 && (heightMm == 500.0 || heightMm == 1000.0)) ||
-            (widthMm == 1000 && heightMm == 1000.0)
+            (widthMm == 1000 && (heightMm == 1000.0 || heightMm == 500.0))
 
     private fun spec1000x1000(
         pitch: Double,

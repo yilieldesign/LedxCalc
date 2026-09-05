@@ -38,6 +38,39 @@ data class ModuleSpec(
         } else {
             "${widthMm} × ${formatDouble(heightMm, 1)} mm"
         }
+
+    /**
+     * Acuesta el gabinete 90° (hacia la izquierda): intercambia ancho↔alto en mm y en px.
+     * Ejemplo 500×1000 / 192×384 → 1000×500 / 384×192. Los px totales no cambian.
+     */
+    fun withModulesOnSide(onSide: Boolean): ModuleSpec {
+        if (!onSide) return this
+        val newWidthMm = heightMm
+        val newHeightMm = widthMm.toDouble()
+        val newWidthPx = heightPx
+        val newHeightPx = widthPx
+        val mmLabel = if (newHeightMm % 1.0 == 0.0) {
+            "${newWidthMm.toInt()}×${newHeightMm.toInt()} mm"
+        } else {
+            "${newWidthMm.toInt()}×${formatDouble(newHeightMm, 1)} mm"
+        }
+        val orientedTitle = if (model.isNotEmpty()) {
+            "$model — ${newWidthPx}×${newHeightPx} px ($mmLabel · acostado)"
+        } else {
+            "Módulo ${newWidthPx}x${newHeightPx} px ($mmLabel · acostado)"
+        }
+        return copy(
+            title = orientedTitle,
+            widthPx = newWidthPx,
+            heightPx = newHeightPx,
+            widthMeters = heightMeters,
+            heightMeters = widthMeters,
+            widthMm = if (newWidthMm % 1.0 == 0.0) newWidthMm.toInt() else kotlin.math.round(newWidthMm).toInt(),
+            heightMm = newHeightMm,
+            totalPixels = totalPixels,
+            modulesPerSignalLine = modulesPerSignalLine
+        )
+    }
 }
 
 @Serializable

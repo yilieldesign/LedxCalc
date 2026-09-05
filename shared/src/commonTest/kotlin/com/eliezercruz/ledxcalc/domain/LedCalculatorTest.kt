@@ -17,7 +17,7 @@ class LedCalculatorTest {
     @Test
     fun catalogHasExpectedCounts() {
         assertEquals(13, ModuleCatalog.forCategory(ModulePhysicalCategory.SIZE_500x500).size)
-        assertEquals(8, ModuleCatalog.forCategory(ModulePhysicalCategory.SIZE_500x1000).size)
+        assertEquals(9, ModuleCatalog.forCategory(ModulePhysicalCategory.SIZE_500x1000).size)
         assertEquals(8, ModuleCatalog.forCategory(ModulePhysicalCategory.SIZE_1000x1000).size)
         assertEquals(13, ModuleCatalog.forCategory(ModulePhysicalCategory.OTHER_FORMATS).size)
     }
@@ -162,5 +162,44 @@ class LedCalculatorTest {
         assertTrue(withGhost.supportCalc.stair4 >= withoutGhost.supportCalc.stair4 ||
             withGhost.supportCalc.stair3 > withoutGhost.supportCalc.stair3 ||
             withGhost.supportCalc.stair2 > withoutGhost.supportCalc.stair2)
+    }
+
+    @Test
+    fun modulesPerSignalLineUsesRjPortCapacity655360() {
+        // P2.6 500×1000: 192×384 = 73_728 → 655_360 / 73_728 ≈ 8.89 → 8 gabinetes/línea
+        assertEquals(8, ModuleCatalog.modulesPerSignalLine(192, 384))
+        val p26 = ModuleCatalog.findByModel(ModulePhysicalCategory.SIZE_500x1000, "P2.6")!!
+        assertEquals(73728, p26.totalPixels)
+        assertEquals(8, p26.modulesPerSignalLine)
+
+        // P3.91 500×1000: 128×256 = 32_768 → 655_360 / 32_768 = 20
+        assertEquals(20, ModuleCatalog.modulesPerSignalLine(128, 256))
+        val p391 = ModuleCatalog.findByModel(ModulePhysicalCategory.SIZE_500x1000, "P3.91")!!
+        assertEquals(20, p391.modulesPerSignalLine)
+    }
+
+    @Test
+    fun modulesOnSideSwapsPhysicalAndPixels() {
+        val upright = ModuleCatalog.findByModel(ModulePhysicalCategory.SIZE_500x1000, "P2.6")!!
+        assertEquals(500, upright.widthMm)
+        assertEquals(1000.0, upright.heightMm)
+        assertEquals(192, upright.widthPx)
+        assertEquals(384, upright.heightPx)
+
+        val onSide = upright.withModulesOnSide(true)
+        assertEquals(1000, onSide.widthMm)
+        assertEquals(500.0, onSide.heightMm)
+        assertEquals(384, onSide.widthPx)
+        assertEquals(192, onSide.heightPx)
+        assertEquals(upright.totalPixels, onSide.totalPixels)
+        assertEquals(upright.modulesPerSignalLine, onSide.modulesPerSignalLine)
+
+        // 5 m × 2.5 m con 1000×500 mm → 5 cols × 5 filas
+        val result = LedCalculator.calculate(onSide, 5.0, 2.5, MeasurementUnit.METERS)
+        requireNotNull(result)
+        assertEquals(5, result.modulesAcross)
+        assertEquals(5, result.modulesHigh)
+        assertEquals(384 * 5, result.widthPixels)
+        assertEquals(192 * 5, result.heightPixels)
     }
 }

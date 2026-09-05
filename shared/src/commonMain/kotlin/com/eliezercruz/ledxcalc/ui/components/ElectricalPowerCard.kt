@@ -93,6 +93,19 @@ fun ElectricalPowerCard(
             textAlign = TextAlign.Center
         )
 
+        val ampsPromGabinete = wattsPromedioPorGabinete / voltage.volts
+        val ampsMaxGabinete = wattsMaxPorGabinete / voltage.volts
+        PowerLine(
+            "Amperes por gabinete (${voltage.label}): ${formatDouble(ampsPromGabinete, 2)} A prom / ${formatDouble(ampsMaxGabinete, 2)} A máx",
+            LedColors.NeonCyan
+        )
+        PowerLine(
+            "Referencia: ${formatDouble(wattsPromedioPorGabinete / 110.0, 2)} / ${formatDouble(wattsMaxPorGabinete / 110.0, 2)} A @110V · " +
+                "${formatDouble(wattsPromedioPorGabinete / 220.0, 2)} / ${formatDouble(wattsMaxPorGabinete / 220.0, 2)} A @220V",
+            LedColors.TextSecondary,
+            MaterialTheme.typography.bodySmall
+        )
+
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),

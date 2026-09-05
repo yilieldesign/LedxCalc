@@ -13,9 +13,20 @@ enum class ModulePhysicalCategory(val label: String) {
 
 object ModuleCatalog {
 
-    /** ~650 kpx por línea de señal (estándar receptor LED). */
-    private fun modulesPerSignalLine(totalPixels: Int): Int =
-        (650_000 / totalPixels).coerceIn(4, 40)
+    /**
+     * Capacidad típica de un puerto RJ en procesadores LED (Nova, Colorlight, etc.).
+     * Gabinetes por línea = floor(655_360 / (anchoPx × altoPx)).
+     * Ejemplo P2.6 500×1000: 192×384 = 73_728 → 655_360 / 73_728 ≈ 8.89 → 8 gabinetes/línea.
+     */
+    const val SIGNAL_PORT_PIXEL_CAPACITY = 655_360
+
+    fun modulesPerSignalLine(totalPixels: Int): Int {
+        if (totalPixels <= 0) return 1
+        return (SIGNAL_PORT_PIXEL_CAPACITY / totalPixels).coerceAtLeast(1)
+    }
+
+    fun modulesPerSignalLine(widthPx: Int, heightPx: Int): Int =
+        modulesPerSignalLine(widthPx * heightPx)
 
     private fun cabinet(
         category: ModulePhysicalCategory,
@@ -88,6 +99,7 @@ object ModuleCatalog {
 
     // ── Gabinetes Rectangulares 500×1000 mm ───────────────────────
     private val modules500x1000: List<ModuleSpec> = listOf(
+        cabinet(ModulePhysicalCategory.SIZE_500x1000, "P2.6", 2.6, 500, 1000.0, 192, 384, 73728),
         cabinet(ModulePhysicalCategory.SIZE_500x1000, "P2.97", 2.97, 500, 1000.0, 168, 336, 56448),
         cabinet(ModulePhysicalCategory.SIZE_500x1000, "P3.0", 3.0, 500, 1000.0, 166, 332, 55112),
         cabinet(ModulePhysicalCategory.SIZE_500x1000, "P3.91", 3.91, 500, 1000.0, 128, 256, 32768),
