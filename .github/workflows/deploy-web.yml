@@ -81,15 +81,38 @@ jobs:
           node-version: 20
 
       - name: Deploy prebuilt dist to Vercel
+        id: vercel
+        continue-on-error: true
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_JbbzFyQe1A3Sn0TbsRsKtEPs
+          VERCEL_PROJECT_ID: prj_3lckjztSjmXJl8nPJsw1vqMdJlta
         run: |
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "ERROR: falta secret VERCEL_TOKEN"
+          set -euo pipefail
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo "::error::Falta el secret VERCEL_TOKEN en GitHub → Settings → Secrets → Actions."
+            echo "Crea un token en https://vercel.com/account/tokens y guárdalo como VERCEL_TOKEN."
             exit 1
           fi
           cp -r .vercel dist/.vercel
           cd dist
-          # Sube el artifact precompilado (no rebuild en Vercel).
-          npx vercel deploy . --prod --yes --token "$VERCEL_TOKEN"
+          echo "Subiendo dist precompilado a Vercel (sin rebuild)..."
+          if ! npx vercel@41 deploy . --prod --yes --token "$VERCEL_TOKEN"; then
+            echo "::error::Deploy a Vercel falló. Suele ser VERCEL_TOKEN vencido o sin acceso al proyecto ledx-calc."
+            echo "1) https://vercel.com/account/tokens → Create → Full Account"
+            echo "2) GitHub → Settings → Secrets and variables → Actions → VERCEL_TOKEN → Update"
+            echo "3) Actions → Deploy Web (Wasm) → Run workflow"
+            echo "GitHub Pages igual quedó publicado aunque Vercel falle."
+            exit 1
+          fi
           echo "Deploy Vercel OK"
+
+      - name: Vercel deploy status
+        if: always()
+        run: |
+          if [ "${{ steps.vercel.outcome }}" = "success" ]; then
+            echo "Vercel: OK → https://ledx-calc.vercel.app"
+          else
+            echo "Vercel: FALLÓ (revisa VERCEL_TOKEN). La app en GitHub Pages sí está actualizada:"
+            echo "https://yilieldesign.github.io/LedxCalc/"
+          fi
