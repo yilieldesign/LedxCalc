@@ -192,5 +192,7 @@ data class PdfExportData(
     val holeWidthFormatted: String,
     val holeHeightFormatted: String,
     val ghostModules: Int = 0,
-    val structureModulesHigh: Int = rows
+    val structureModulesHigh: Int = rows,
+    /** Si es false, el PDF solo muestra especificaciones técnicas (sin columna Estructura). */
+    val includeStructure: Boolean = false
 )

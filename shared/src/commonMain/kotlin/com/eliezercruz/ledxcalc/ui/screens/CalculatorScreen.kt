@@ -408,6 +408,7 @@ private fun ResolutionResults(
 ) {
     var pdfVoltageKey by rememberSaveable { mutableStateOf(SupplyVoltage.V110.name) }
     var pdfBreakerKey by rememberSaveable { mutableStateOf(BreakerRating.A20.name) }
+    var includeStructureInPdf by rememberSaveable { mutableStateOf(false) }
     val pdfVoltage = SupplyVoltage.valueOf(pdfVoltageKey)
     val pdfBreaker = BreakerRating.valueOf(pdfBreakerKey)
 
@@ -557,6 +558,41 @@ private fun ResolutionResults(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Button3D("💾 Guardar en historial", true, onClick = onSaveToHistory)
             }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .toggleable(
+                        value = includeStructureInPdf,
+                        role = Role.Checkbox,
+                        onValueChange = { includeStructureInPdf = it }
+                    )
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Checkbox(
+                    checked = includeStructureInPdf,
+                    onCheckedChange = null,
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = LedColors.NeonMagenta,
+                        uncheckedColor = LedColors.TextSecondary,
+                        checkmarkColor = LedColors.Black
+                    )
+                )
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = "Agregar estructura",
+                        color = LedColors.NeonMagenta,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Incluye en el PDF la columna de bases / truss. Si no está marcada, solo salen las especificaciones técnicas.",
+                        color = LedColors.TextSecondary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 val pdfData = LedCalculator.toPdfExportData(
                     moduleSpec = moduleSpec,
@@ -565,7 +601,8 @@ private fun ResolutionResults(
                     heightMeters = heightMeters,
                     voltage = pdfVoltage,
                     breaker = pdfBreaker,
-                    sketchSelection = sketchSelection
+                    sketchSelection = sketchSelection,
+                    includeStructure = includeStructureInPdf
                 )
                 Button3D("👁️ Vista Previa PDF", true) { previewPdf(platformContext, pdfData) }
                 Spacer(Modifier.width(12.dp))

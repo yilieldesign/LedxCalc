@@ -100,21 +100,24 @@ internal object PdfSketchRenderer {
         pageWidth: Int,
         startY: Float
     ) {
+        val includeStructure = data.includeStructure
         val colGap = 20f
         val colW = (pageWidth - 48f - colGap) / 2f
         val leftX = 24f
         val rightX = leftX + colW + colGap
-        val lineH = 21f
-        val valueXLeft = leftX + 148f
+        val lineH = if (includeStructure) 21f else 22f
+        val valueXLeft = leftX + if (includeStructure) 148f else 168f
         val valueXRight = rightX + 148f
-        val bodySize = 14.5f
-        val headerSize = 16f
+        val bodySize = if (includeStructure) 14.5f else 15.5f
+        val headerSize = if (includeStructure) 16f else 17f
 
         paint.textAlign = Paint.Align.LEFT
         applyPlainText(paint, bodyTypeface, headerSize, specLabelBlue)
         canvas.drawText("ESPECIFICACIONES TÉCNICAS", leftX, startY, paint)
-        applyPlainText(paint, bodyTypeface, headerSize, specLabelGreen)
-        canvas.drawText("ESTRUCTURA", rightX, startY, paint)
+        if (includeStructure) {
+            applyPlainText(paint, bodyTypeface, headerSize, specLabelGreen)
+            canvas.drawText("ESTRUCTURA", rightX, startY, paint)
+        }
 
         val leftLines = buildList {
             add("Columnas:" to "${data.columns}")
@@ -137,6 +140,17 @@ internal object PdfSketchRenderer {
             }
         }
 
+        var yLeft = startY + 22f
+        leftLines.forEach { (label, value) ->
+            applyPlainText(paint, bodyTypeface, bodySize, specLabelBlue)
+            canvas.drawText(label, leftX, yLeft, paint)
+            applyPlainText(paint, bodyTypeface, bodySize, specWhite)
+            canvas.drawText(value, valueXLeft, yLeft, paint)
+            yLeft += lineH
+        }
+
+        if (!includeStructure) return
+
         val rightLines = buildList {
             when (data.structureMounting) {
                 StructureMounting.FLOOR_BASES -> {
@@ -156,15 +170,6 @@ internal object PdfSketchRenderer {
                     add("Truss:" to "${data.trussWidthFeet} × ${data.trussHeightFeet} ft")
                 }
             }
-        }
-
-        var yLeft = startY + 22f
-        leftLines.forEach { (label, value) ->
-            applyPlainText(paint, bodyTypeface, bodySize, specLabelBlue)
-            canvas.drawText(label, leftX, yLeft, paint)
-            applyPlainText(paint, bodyTypeface, bodySize, specWhite)
-            canvas.drawText(value, valueXLeft, yLeft, paint)
-            yLeft += lineH
         }
 
         var yRight = startY + 22f

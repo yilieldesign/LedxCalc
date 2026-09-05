@@ -181,18 +181,21 @@ object LedxColoredPdf {
 
     private fun drawSpecsFooter(content: StringBuilder, data: PdfExportData, startYFromBottom: Float) {
         // startYFromBottom is PDF Y of the header baseline area (approx top of specs block)
+        val includeStructure = data.includeStructure
         val colGap = 20f
         val leftX = 24f
         val rightX = leftX + (PAGE_W - 48f - colGap) / 2f + colGap
-        val valueXLeft = leftX + 148f
+        val valueXLeft = leftX + if (includeStructure) 148f else 168f
         val valueXRight = rightX + 148f
-        val lineH = 19f
-        val bodySize = 12.5f
-        val headerSize = 14.5f
+        val lineH = if (includeStructure) 19f else 20f
+        val bodySize = if (includeStructure) 12.5f else 13.5f
+        val headerSize = if (includeStructure) 14.5f else 15.5f
         val headerY = startYFromBottom
 
         content.appendText(leftX, headerY, headerSize, PdfRgb.CYAN, "ESPECIFICACIONES TÉCNICAS", bold = true)
-        content.appendText(rightX, headerY, headerSize, PdfRgb.GREEN, "ESTRUCTURA", bold = true)
+        if (includeStructure) {
+            content.appendText(rightX, headerY, headerSize, PdfRgb.GREEN, "ESTRUCTURA", bold = true)
+        }
 
         val leftLines = buildList {
             add("Columnas:" to "${data.columns}")
@@ -206,7 +209,7 @@ object LedxColoredPdf {
             add("Cobertura:" to "${data.displayWidth} × ${data.displayHeight} ${data.unitLabel}")
             add("Líneas de señal:" to "${data.signalLines} (máx ${data.groupSize}/línea)")
             add("Hueco pantalla:" to "${data.holeWidthFormatted} × ${data.holeHeightFormatted} ft")
-            add("Módulo:" to data.moduleSpec.title.take(42))
+            add("Módulo:" to data.moduleSpec.title.take(if (includeStructure) 42 else 56))
             if (SketchKind.ELECTRICAL in data.selectedSketches) {
                 val load = data.electrical.loadResult
                 val v = data.electrical.selectedVoltage.label
@@ -214,6 +217,15 @@ object LedxColoredPdf {
                 add("Amperaje máx ($v):" to "${load.amperajeMaxFormatted} A")
             }
         }
+
+        var yLeft = headerY - 22f
+        leftLines.forEach { (label, value) ->
+            content.appendText(leftX, yLeft, bodySize, PdfRgb.CYAN, label)
+            content.appendText(valueXLeft, yLeft, bodySize, PdfRgb.WHITE, value)
+            yLeft -= lineH
+        }
+
+        if (!includeStructure) return
 
         val rightLines = buildList {
             when (data.structureMounting) {
@@ -236,12 +248,6 @@ object LedxColoredPdf {
             }
         }
 
-        var yLeft = headerY - 22f
-        leftLines.forEach { (label, value) ->
-            content.appendText(leftX, yLeft, bodySize, PdfRgb.CYAN, label)
-            content.appendText(valueXLeft, yLeft, bodySize, PdfRgb.WHITE, value)
-            yLeft -= lineH
-        }
         var yRight = headerY - 22f
         rightLines.forEach { (label, value) ->
             content.appendText(rightX, yRight, bodySize, PdfRgb.GREEN, label)

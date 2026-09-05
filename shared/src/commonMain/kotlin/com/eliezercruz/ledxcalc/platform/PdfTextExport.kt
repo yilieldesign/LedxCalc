@@ -27,18 +27,20 @@ fun buildPdfTextSummary(data: PdfExportData): String = buildString {
     appendLine("Cobertura: ${data.displayWidth} × ${data.displayHeight} ${data.unitLabel}")
     appendLine("Líneas de señal: ${data.signalLines} (máx ${data.groupSize}/línea)")
     appendLine("Hueco pantalla: ${data.holeWidthFormatted} × ${data.holeHeightFormatted} ft")
-    appendLine()
-    appendLine("── ESTRUCTURA ──")
-    when (data.structureMounting) {
-        StructureMounting.FLOOR_BASES -> {
-            appendLine("Montaje: Bases de piso")
-            val s = data.supportCalc
-            BasesDistribution.baseLines(s).forEach { appendLine(it) }
-            BasesDistribution.stairLines(s).forEach { appendLine(it) }
-        }
-        StructureMounting.TRUSS -> {
-            appendLine("Montaje: Truss / colgado")
-            appendLine("Truss: ${data.trussWidthFeet} × ${data.trussHeightFeet} ft")
+    if (data.includeStructure) {
+        appendLine()
+        appendLine("── ESTRUCTURA ──")
+        when (data.structureMounting) {
+            StructureMounting.FLOOR_BASES -> {
+                appendLine("Montaje: Bases de piso")
+                val s = data.supportCalc
+                BasesDistribution.baseLines(s).forEach { appendLine(it) }
+                BasesDistribution.stairLines(s).forEach { appendLine(it) }
+            }
+            StructureMounting.TRUSS -> {
+                appendLine("Montaje: Truss / colgado")
+                appendLine("Truss: ${data.trussWidthFeet} × ${data.trussHeightFeet} ft")
+            }
         }
     }
     if (SketchKind.ELECTRICAL in data.selectedSketches) {

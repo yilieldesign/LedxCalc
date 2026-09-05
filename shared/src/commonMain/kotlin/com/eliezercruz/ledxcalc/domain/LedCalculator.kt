@@ -219,7 +219,8 @@ object LedCalculator {
         heightMeters: Double?,
         voltage: SupplyVoltage = SupplyVoltage.V110,
         breaker: BreakerRating = BreakerRating.A20,
-        sketchSelection: SketchSelection = SketchSelection.initial()
+        sketchSelection: SketchSelection = SketchSelection.initial(),
+        includeStructure: Boolean = false
     ): PdfExportData {
         val load = ElectricalLoadCalculator.calcularCargaElectrica(
             wattsMaxPorGabinete = result.wattsPerModuleMax,
@@ -272,7 +273,8 @@ object LedCalculator {
             holeWidthFormatted = result.holeWidthFormatted,
             holeHeightFormatted = result.holeHeightFormatted,
             ghostModules = result.ghostModules,
-            structureModulesHigh = result.structureModulesHigh
+            structureModulesHigh = result.structureModulesHigh,
+            includeStructure = includeStructure
         )
     }
 }
