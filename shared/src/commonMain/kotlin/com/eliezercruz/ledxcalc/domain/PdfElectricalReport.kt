@@ -1,7 +1,5 @@
 package com.eliezercruz.ledxcalc.domain
 
-import com.eliezercruz.ledxcalc.util.formatDouble
-
 data class PdfElectricalSection(
     val model: String,
     val pitch: Double,
@@ -28,12 +26,11 @@ object PdfElectricalReport {
         return listOf(
             "── POTENCIA ELÉCTRICA ──",
             "Modelo: ${section.model}$pitch · $env",
-            "Por gabinete: ${formatW(section.wattsPerCabinetProm)} W prom / ${formatW(section.wattsPerCabinetMax)} W máx",
-            "Total pantalla: ${formatW(section.totalWattsProm)} W prom / ${formatW(section.totalWattsMax)} W máx (pico blanco)",
             "Amperaje 110V: ${section.amperes110Prom} A prom · ${section.amperes110Max} A máx",
             "Amperaje 220V: ${section.amperes220Prom} A prom · ${section.amperes220Max} A máx",
             "",
             "── REGLA DEL 80% (${section.selectedBreaker.label} @ ${section.selectedVoltage.label}) ──",
+            "Amperaje prom (${section.selectedVoltage.label}): ${load.amperajePromedioFormatted} A",
             "Amperaje máx (${section.selectedVoltage.label}): ${load.amperajeMaxFormatted} A",
             "Límite continuo seguro (80%): ${load.limiteSeguridadFormatted} A",
             "Gabinetes máx. por circuito: ${load.gabinetesPermitidosPorCircuito}",
@@ -46,6 +43,4 @@ object PdfElectricalReport {
 
     fun formatText(section: PdfElectricalSection): String =
         sectionLines(section).joinToString("\n")
-
-    private fun formatW(value: Double): String = formatDouble(value, 0)
 }

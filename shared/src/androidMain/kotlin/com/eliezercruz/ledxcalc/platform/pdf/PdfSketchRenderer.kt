@@ -126,12 +126,10 @@ internal object PdfSketchRenderer {
             add("Hueco pantalla:" to "${data.holeWidthFormatted} × ${data.holeHeightFormatted} ft")
             add("Módulo:" to data.moduleSpec.title)
             if (SketchKind.ELECTRICAL in data.selectedSketches) {
-                add("Potencia prom:" to "${data.electrical.totalWattsProm.toInt()} W")
-                add("Potencia máx:" to "${data.electrical.totalWattsMax.toInt()} W")
-                add(
-                    "Amperaje (${data.electrical.selectedVoltage.label}):" to
-                        "${data.electrical.loadResult.amperajeMaxFormatted} A"
-                )
+                val load = data.electrical.loadResult
+                val v = data.electrical.selectedVoltage.label
+                add("Amperaje prom ($v):" to "${load.amperajePromedioFormatted} A")
+                add("Amperaje máx ($v):" to "${load.amperajeMaxFormatted} A")
             }
         }
 

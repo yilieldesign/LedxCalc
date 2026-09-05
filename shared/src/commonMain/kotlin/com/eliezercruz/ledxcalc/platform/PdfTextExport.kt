@@ -44,9 +44,10 @@ fun buildPdfTextSummary(data: PdfExportData): String = buildString {
     if (SketchKind.ELECTRICAL in data.selectedSketches) {
         appendLine()
         appendLine("── ELÉCTRICO ──")
-        appendLine("Potencia prom: ${data.electrical.totalWattsProm.toInt()} W")
-        appendLine("Potencia máx: ${data.electrical.totalWattsMax.toInt()} W")
-        appendLine("Amperaje (${data.electrical.selectedVoltage.label}): ${data.electrical.loadResult.amperajeMaxFormatted} A")
+        val load = data.electrical.loadResult
+        val v = data.electrical.selectedVoltage.label
+        appendLine("Amperaje prom ($v): ${load.amperajePromedioFormatted} A")
+        appendLine("Amperaje máx ($v): ${load.amperajeMaxFormatted} A")
     }
     appendLine()
     appendLine("Generado por LedxCalc — Creado por Eliezer Cruz")
