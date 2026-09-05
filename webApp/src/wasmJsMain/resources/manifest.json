@@ -2,7 +2,7 @@
   "name": "LedxCalc — Calculadora LED",
   "short_name": "LedxCalc",
   "description": "Calculadora de resolución, módulos y estructura para pantallas LED",
-  "start_url": "/",
+  "start_url": "/?v=20260905b",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
